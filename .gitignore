@@ -1,0 +1,40 @@
+# --- الـ Dependencies ---
+node_modules/
+.pnpm-debug.log
+
+# --- ملفات البيئة الحساسة (ممنوع ترفعها!) ---
+.env
+.env.local
+.env.*.local
+
+# Build Outputs
+dist/
+build/
+.next/
+out/
+.expo/
+.vscode
+web-build/
+
+# --- ملفات الـ TypeScript والـ Cache ---
+*.tsbuildinfo
+.eslintcache
+.turbo
+
+# --- ملفات نظام التشغيل ---
+.DS_Store
+Thumbs.db
+
+# --- ملفات الـ Mobile (Expo/React Native) ---
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+/apps/mobile/android/
+/apps/mobile/ios/
+
+# --- ملفات الـ Database (لو استخدمت SQLite محلياً) ---
+*.db
+*.db-journal
