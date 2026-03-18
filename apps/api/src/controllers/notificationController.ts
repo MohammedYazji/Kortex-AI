@@ -1,0 +1,38 @@
+import { Request, Response, NextFunction } from "express";
+import { NotificationService } from "../services/notificationService";
+import { catchAsync } from "../utils/catchAsync";
+import { AppError } from "../errors/AppError";
+
+export class NotificationController {
+  private notificationService = new NotificationService();
+
+  public createNotification = catchAsync(
+    async (req: Request, res: Response, next: NextFunction) => {
+      // FETCH THE DATA FROM THE REQUEST
+      const { title, body, senderName, appName, packageName, deviceTimestamp } =
+        req.body;
+
+      // VALIDATE THE MAIN DATA
+      if (!title || !body) {
+        return next(new AppError("Title and Body are required", 400));
+      }
+
+      // THE CREATION PROCESS USING THE SERVICE
+      const notification = await this.notificationService.create({
+        title,
+        body,
+        senderName,
+        appName,
+        packageName,
+        deviceTimestamp: deviceTimestamp
+          ? new Date(deviceTimestamp)
+          : new Date(),
+      });
+
+      res.status(201).json({
+        status: "success",
+        data: { notification },
+      });
+    },
+  );
+}

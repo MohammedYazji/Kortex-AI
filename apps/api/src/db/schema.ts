@@ -15,7 +15,7 @@ export const notifications = pgTable("notifications", {
   // The source info
   senderName: text("sender_name"),
   appName: text("app_name").notNull(),
-  packageName: text("package_name"),
+  packageName: text("package_name"), // TO-DO: Not null just for testing (to allow us make a new notification via the mobile app)
   // The classification result (Model will fill those fields)
   category: text("category"), // (Urgent, Normal, Noise)
   confidence: doublePrecision("confidence"),
