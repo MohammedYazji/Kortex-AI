@@ -1,6 +1,8 @@
-import express, { Response, Request } from "express";
+import express, { Response, Request, NextFunction } from "express";
 import cors from "cors";
 import { config } from "./config/env";
+import { globalErrorHandler } from "./middlewares/errorMiddleware";
+import { AppError } from "./errors/AppError";
 
 const bootstrap = async () => {
   // SETUP EXPRESS
@@ -14,6 +16,14 @@ const bootstrap = async () => {
   app.get("/", async (req: Request, res: Response) => {
     res.send("Let's begin the new journey");
   });
+
+  // HANDLE UNHANDLED ROUTES
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
+  });
+
+  // GLOBAL ERROR HANDLER
+  app.use(globalErrorHandler);
 
   // START SERVER
   app.listen(config.PORT, () => {
