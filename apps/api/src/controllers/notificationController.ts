@@ -1,3 +1,4 @@
+import { notifications } from "./../db/schema";
 import { Request, Response, NextFunction } from "express";
 import { NotificationService } from "../services/notificationService";
 import { catchAsync } from "../utils/catchAsync";
@@ -47,6 +48,28 @@ export class NotificationController {
         data: {
           notifications,
         },
+      });
+    },
+  );
+
+  // GET NOTIFICATION BY ID
+  public getNotification = catchAsync(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const id = Number(req.params.id);
+
+      if (isNaN(id)) {
+        return next(new AppError("Invalid ID format", 400));
+      }
+
+      const notification = await this.notificationService.findById(id);
+
+      if (!notification) {
+        return next(new AppError("No notification found with this ID", 404));
+      }
+
+      res.status(200).json({
+        status: "success",
+        data: { notification },
       });
     },
   );

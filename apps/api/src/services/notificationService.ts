@@ -1,4 +1,4 @@
-import { desc, InferInsertModel } from "drizzle-orm";
+import { desc, eq, InferInsertModel } from "drizzle-orm";
 import { db } from "../db/database";
 import { notifications } from "../db/schema";
 
@@ -31,5 +31,15 @@ export class NotificationService {
       .select()
       .from(notifications)
       .orderBy(desc(notifications.createdAt));
+  }
+
+  // GET NOTIFICATION BY ID
+  async findById(id: number) {
+    const [notification] = await db
+      .select()
+      .from(notifications)
+      .where(eq(notifications.id, id));
+
+    return notification;
   }
 }
