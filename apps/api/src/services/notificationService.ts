@@ -1,4 +1,4 @@
-import { desc, eq, InferInsertModel } from "drizzle-orm";
+import { desc, eq, InferInsertModel, sql } from "drizzle-orm";
 import { db } from "../db/database";
 import { notifications } from "../db/schema";
 
@@ -55,6 +55,9 @@ export class NotificationService {
 
   // CLEAR ALL NOTIFICATIONS
   async deleteAll() {
-    return await db.delete(notifications);
+    // NOW AFTER WE MAKE CLEAR -- THE ID SERIAL WILL START AGAIN FROM 1
+    return await db.execute(
+      sql`TRUNCATE TABLE ${notifications} RESTART IDENTITY`,
+    );
   }
 }
