@@ -73,4 +73,38 @@ export class NotificationController {
       });
     },
   );
+
+  // DELETE A NOTIFICATION
+  public deleteNotification = catchAsync(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const id = Number(req.params.id);
+
+      if (isNaN(id)) {
+        return next(new AppError("Invalid ID format", 400));
+      }
+
+      const deleted = await this.notificationService.delete(id);
+
+      if (!deleted) {
+        return next(new AppError("No notification found with that ID", 404));
+      }
+
+      res.status(204).json({
+        status: "success",
+        data: null,
+      });
+    },
+  );
+
+  // DELETE ALL NOTIFICATIONS
+  public clearAllNotifications = catchAsync(
+    async (req: Request, res: Response, next: NextFunction) => {
+      await this.notificationService.deleteAll();
+
+      res.status(204).json({
+        status: "success",
+        data: null,
+      });
+    },
+  );
 }

@@ -42,4 +42,19 @@ export class NotificationService {
 
     return notification;
   }
+
+  // DELETE A NOTIFICATION
+  async delete(id: number) {
+    const [deletedNotification] = await db
+      .delete(notifications)
+      .where(eq(notifications.id, id))
+      .returning();
+
+    return deletedNotification;
+  }
+
+  // CLEAR ALL NOTIFICATIONS
+  async deleteAll() {
+    return await db.delete(notifications);
+  }
 }
