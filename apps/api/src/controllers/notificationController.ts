@@ -5,7 +5,7 @@ import { AppError } from "../errors/AppError";
 
 export class NotificationController {
   private notificationService = new NotificationService();
-
+  // CREATE A NEW NOTIFICATION
   public createNotification = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
       // FETCH THE DATA FROM THE REQUEST
@@ -32,6 +32,21 @@ export class NotificationController {
       res.status(201).json({
         status: "success",
         data: { notification },
+      });
+    },
+  );
+
+  // GET ALL NOTIFICATIONS
+  public getAllNotifications = catchAsync(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const notifications = await this.notificationService.findAll();
+
+      res.status(200).json({
+        status: "success",
+        results: notifications.length,
+        data: {
+          notifications,
+        },
       });
     },
   );

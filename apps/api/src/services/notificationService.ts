@@ -1,4 +1,4 @@
-import { InferInsertModel } from "drizzle-orm";
+import { desc, InferInsertModel } from "drizzle-orm";
 import { db } from "../db/database";
 import { notifications } from "../db/schema";
 
@@ -6,6 +6,7 @@ import { notifications } from "../db/schema";
 export type CreateNotificationInput = InferInsertModel<typeof notifications>;
 
 export class NotificationService {
+  // CREATE A NEW NOTIFICATION
   async create(data: CreateNotificationInput) {
     // TO-DO: When Model get Ready Get (category, confidence) to pass with whole data
     const finalData = {
@@ -22,5 +23,13 @@ export class NotificationService {
       .returning();
 
     return newNotification;
+  }
+
+  // GET ALL NOTIFICATIONS
+  async findAll() {
+    return await db
+      .select()
+      .from(notifications)
+      .orderBy(desc(notifications.createdAt));
   }
 }

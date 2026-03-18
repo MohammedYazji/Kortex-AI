@@ -4,6 +4,9 @@ import { NotificationController } from "../controllers/notificationController";
 const router = Router();
 const controller = new NotificationController();
 
-router.route("/").post(controller.createNotification);
+router
+  .route("/")
+  .get(controller.getAllNotifications)
+  .post(controller.createNotification);
 
 export { router as notificationRoutes };
