@@ -22,6 +22,13 @@
       "when": 1773876687967,
       "tag": "0002_typical_magik",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1773880667051,
+      "tag": "0003_third_hammerhead",
+      "breakpoints": true
     }
   ]
 }

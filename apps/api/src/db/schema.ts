@@ -5,6 +5,7 @@ import {
   timestamp,
   doublePrecision,
   pgEnum,
+  boolean,
 } from "drizzle-orm/pg-core";
 
 // Define the priorities levels
@@ -14,6 +15,16 @@ export const priorityOverrideEnum = pgEnum("priority_override", [
   "high",
   "essential",
 ]);
+
+// Define the delivery status of the notification
+
+export const deliveryStatusEnum = pgEnum("delivery_status", [
+  "immediate",
+  "delayed",
+  "silenced",
+]);
+
+/////////////////////////////
 
 // Preferences Table
 export const userPreferences = pgTable("user_preferences", {
@@ -25,7 +36,7 @@ export const userPreferences = pgTable("user_preferences", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Notifications table
+// Notifications Table
 export const notifications = pgTable("notifications", {
   id: serial("id").primaryKey(),
   // Main content for the model to classify it
@@ -38,7 +49,15 @@ export const notifications = pgTable("notifications", {
   // The classification result (Model will fill those fields)
   category: text("category"), // (Urgent, Normal, Noise)
   confidence: doublePrecision("confidence"),
+  deliveryStatus: deliveryStatusEnum("delivery_status").default("immediate"),
   // The time of the notification
   deviceTimestamp: timestamp("device_timestamp"), // When we receive it
   createdAt: timestamp("created_at").defaultNow(), // When we save it to the db
+});
+
+// Settings Table
+export const appSettings = pgTable("app_settings", {
+  id: serial("id").primaryKey(),
+  isFocusModeEnabled: boolean("is_focus_mode_enabled").default(false),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });

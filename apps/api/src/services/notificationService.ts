@@ -1,6 +1,6 @@
 import { desc, eq, InferInsertModel, sql } from "drizzle-orm";
 import { db } from "../db/database";
-import { notifications } from "../db/schema";
+import { appSettings, notifications } from "../db/schema";
 import { pipeline, env } from "@xenova/transformers";
 import path from "path";
 import { preferenceService } from "./preferenceService";
@@ -28,9 +28,13 @@ export class NotificationService {
     }
     return this.classifier;
   }
+
   // CREATE A NEW NOTIFICATION
   async create(data: CreateNotificationInput) {
-    // CHECK THE PREFERENCES
+    let category: "urgent" | "normal" | "noise" = "normal";
+    let score = 1.0;
+
+    // 1. CHECK THE PREFERENCES
     const override = await preferenceService.getPriorityOverride(
       data.senderName ?? undefined,
       data.packageName ?? undefined,
@@ -38,30 +42,49 @@ export class NotificationService {
 
     // SO WHEN REACH THE UI WE CAN CHECK SOME APPS OR EVEN SENDERS ALWAYS AS (URGENT, OR NOISE)
     if (override) {
-      const category = mapPreferenceToCategory(override.priorityLevel);
-      if (category) {
-        return await this.saveToDb(data, category, 1.0);
-      }
+      category =
+        (mapPreferenceToCategory(override.priorityLevel) as any) || "normal";
+    } else {
+      // 2. IF THE USER HAS NO PREFERENCES LET OUR MODEL DECIDE
+      const classifier = await this.getClassifier();
+      const output = await classifier(data.body);
+      category = labelMap[output[0].label] || "normal";
+      score = output[0].score;
     }
 
-    // IF THE USER HAS NO PREFERENCES LET OUR MODEL DECIDE
-    const classifier = await this.getClassifier();
-    const output = await classifier(data.body);
-    const { label, score } = output[0];
+    // 3. Fetch the Focus Mode from the DB to decide when to send the notification
+    const settings = await db.select().from(appSettings).limit(1);
+    const isFocusOn = settings[0]?.isFocusModeEnabled ?? false;
 
-    const category = labelMap[label] || "normal";
+    // 4. DEFINE THE DELIVERY STATUS
+    let deliveryStatus: "immediate" | "delayed" | "silenced" = "immediate";
 
-    return await this.saveToDb(data, category, score);
+    if (category === "noise") {
+      deliveryStatus = "silenced";
+    } else if (category === "normal") {
+      deliveryStatus = isFocusOn ? "delayed" : "immediate";
+    } else if (category === "urgent") {
+      deliveryStatus = "immediate";
+    }
+
+    // 5. SAVE THE NOTIFICATION
+    return await this.saveToDb(data, category, score, deliveryStatus);
   }
 
   // PRIVATE METHOD TO STORE THE NOTIFICATION INTO THE DB
-  private async saveToDb(data: any, category: string, confidence: number) {
+  private async saveToDb(
+    data: any,
+    category: string,
+    confidence: number,
+    deliveryStatus: "immediate" | "delayed" | "silenced",
+  ) {
     return await db
       .insert(notifications)
       .values({
         ...data,
         category,
         confidence,
+        deliveryStatus,
       })
       .returning();
   }
