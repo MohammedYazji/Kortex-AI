@@ -4,7 +4,26 @@ import {
   text,
   timestamp,
   doublePrecision,
+  pgEnum,
 } from "drizzle-orm/pg-core";
+
+// Define the priorities levels
+export const priorityOverrideEnum = pgEnum("priority_override", [
+  "low",
+  "medium",
+  "high",
+  "essential",
+]);
+
+// Preferences Table
+export const userPreferences = pgTable("user_preferences", {
+  id: serial("id").primaryKey(),
+  entityName: text("entity_name").notNull(), // mom, or even com.whatsapp
+  entityType: text("entity_type").notNull(), // app, sender, or keyword
+  priorityLevel: priorityOverrideEnum("priority_level").default("medium"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
 
 // Notifications table
 export const notifications = pgTable("notifications", {

@@ -3,8 +3,9 @@ import { db } from "../db/database";
 import { notifications } from "../db/schema";
 import { pipeline, env } from "@xenova/transformers";
 import path from "path";
+import { preferenceService } from "./preferenceService";
+import { mapPreferenceToCategory } from "../utils/priorityMapper";
 
-console.log(__dirname);
 // SO THE DATA MUST FIT THE SCHEMA WE DEFINED BEFORE
 export type CreateNotificationInput = InferInsertModel<typeof notifications>;
 
@@ -29,25 +30,40 @@ export class NotificationService {
   }
   // CREATE A NEW NOTIFICATION
   async create(data: CreateNotificationInput) {
+    // CHECK THE PREFERENCES
+    const override = await preferenceService.getPriorityOverride(
+      data.senderName ?? undefined,
+      data.packageName ?? undefined,
+    );
+
+    // SO WHEN REACH THE UI WE CAN CHECK SOME APPS OR EVEN SENDERS ALWAYS AS (URGENT, OR NOISE)
+    if (override) {
+      const category = mapPreferenceToCategory(override.priorityLevel);
+      if (category) {
+        return await this.saveToDb(data, category, 1.0);
+      }
+    }
+
+    // IF THE USER HAS NO PREFERENCES LET OUR MODEL DECIDE
     const classifier = await this.getClassifier();
     const output = await classifier(data.body);
     const { label, score } = output[0];
 
-    const finalData = {
-      ...data,
-      packageName: data.packageName || "com.kortex.internal",
-      appName: data.appName || "Kortex Manual Test",
-      senderName: data.senderName || "System Tester",
-      category: labelMap[label as keyof typeof labelMap] || "normal",
-      confidence: score,
-    };
+    const category = labelMap[label] || "normal";
 
-    const [newNotification] = await db
+    return await this.saveToDb(data, category, score);
+  }
+
+  // PRIVATE METHOD TO STORE THE NOTIFICATION INTO THE DB
+  private async saveToDb(data: any, category: string, confidence: number) {
+    return await db
       .insert(notifications)
-      .values(finalData)
+      .values({
+        ...data,
+        category,
+        confidence,
+      })
       .returning();
-
-    return newNotification;
   }
 
   // GET ALL NOTIFICATIONS
