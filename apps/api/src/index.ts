@@ -4,6 +4,7 @@ import { config } from "./config/env";
 import { globalErrorHandler } from "./middlewares/errorMiddleware";
 import { AppError } from "./errors/AppError";
 import { notificationRoutes } from "./routes/notificationRoutes";
+import { settingsRouter } from "./routes/settingsRoutes";
 
 const bootstrap = async () => {
   // SETUP EXPRESS
@@ -15,6 +16,7 @@ const bootstrap = async () => {
 
   // ROUTES
   app.use("/api/v1/notifications", notificationRoutes);
+  app.use("/api/v1/settings", settingsRouter);
 
   // HANDLE UNHANDLED ROUTES
   app.use((req: Request, res: Response, next: NextFunction) => {

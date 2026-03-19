@@ -1,18 +1,17 @@
 import { Router } from "express";
-import { NotificationController } from "../controllers/notificationController";
+import { notificationController } from "../controllers/notificationController";
 
 const router = Router();
-const controller = new NotificationController();
 
 router
   .route("/")
-  .get(controller.getAllNotifications)
-  .post(controller.createNotification)
-  .delete(controller.clearAllNotifications);
+  .get(notificationController.getAllNotifications)
+  .post(notificationController.createNotification)
+  .delete(notificationController.clearAllNotifications);
 
 router
   .route("/:id")
-  .get(controller.getNotification)
-  .delete(controller.deleteNotification);
+  .get(notificationController.getNotification)
+  .delete(notificationController.deleteNotification);
 
 export { router as notificationRoutes };

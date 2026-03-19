@@ -1,10 +1,11 @@
 import { desc, eq, InferInsertModel, sql } from "drizzle-orm";
 import { db } from "../db/database";
-import { appSettings, notifications } from "../db/schema";
+import { notifications } from "../db/schema";
 import { pipeline, env } from "@xenova/transformers";
 import path from "path";
 import { preferenceService } from "./preferenceService";
 import { mapPreferenceToCategory } from "../utils/priorityMapper";
+import { settingsService } from "./settingsService";
 
 // SO THE DATA MUST FIT THE SCHEMA WE DEFINED BEFORE
 export type CreateNotificationInput = InferInsertModel<typeof notifications>;
@@ -17,6 +18,7 @@ const labelMap: Record<string, "urgent" | "normal" | "noise"> = {
 
 export class NotificationService {
   private classifier: any = null;
+
   // CLASSIFY A SINGLE NOTIFICATION TEXT
   private async getClassifier() {
     if (!this.classifier) {
@@ -53,8 +55,8 @@ export class NotificationService {
     }
 
     // 3. Fetch the Focus Mode from the DB to decide when to send the notification
-    const settings = await db.select().from(appSettings).limit(1);
-    const isFocusOn = settings[0]?.isFocusModeEnabled ?? false;
+    const settings = await settingsService.getCurrentSettings();
+    const isFocusOn = settings?.isFocusModeEnabled ?? false;
 
     // 4. DEFINE THE DELIVERY STATUS
     let deliveryStatus: "immediate" | "delayed" | "silenced" = "immediate";
@@ -125,3 +127,5 @@ export class NotificationService {
     );
   }
 }
+
+export const notificationService = new NotificationService();

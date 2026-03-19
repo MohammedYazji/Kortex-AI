@@ -1,11 +1,9 @@
-import { notifications } from "./../db/schema";
 import { Request, Response, NextFunction } from "express";
-import { NotificationService } from "../services/notificationService";
+import { notificationService } from "../services/notificationService";
 import { catchAsync } from "../utils/catchAsync";
 import { AppError } from "../errors/AppError";
 
 export class NotificationController {
-  private notificationService = new NotificationService();
   // CREATE A NEW NOTIFICATION
   public createNotification = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
@@ -19,7 +17,7 @@ export class NotificationController {
       }
 
       // THE CREATION PROCESS USING THE SERVICE
-      const notification = await this.notificationService.create({
+      const notification = await notificationService.create({
         title,
         body,
         senderName,
@@ -40,7 +38,7 @@ export class NotificationController {
   // GET ALL NOTIFICATIONS
   public getAllNotifications = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
-      const notifications = await this.notificationService.findAll();
+      const notifications = await notificationService.findAll();
 
       res.status(200).json({
         status: "success",
@@ -61,7 +59,7 @@ export class NotificationController {
         return next(new AppError("Invalid ID format", 400));
       }
 
-      const notification = await this.notificationService.findById(id);
+      const notification = await notificationService.findById(id);
 
       if (!notification) {
         return next(new AppError("No notification found with this ID", 404));
@@ -83,7 +81,7 @@ export class NotificationController {
         return next(new AppError("Invalid ID format", 400));
       }
 
-      const deleted = await this.notificationService.delete(id);
+      const deleted = await notificationService.delete(id);
 
       if (!deleted) {
         return next(new AppError("No notification found with that ID", 404));
@@ -99,7 +97,7 @@ export class NotificationController {
   // DELETE ALL NOTIFICATIONS
   public clearAllNotifications = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
-      await this.notificationService.deleteAll();
+      await notificationService.deleteAll();
 
       res.status(204).json({
         status: "success",
@@ -108,3 +106,5 @@ export class NotificationController {
     },
   );
 }
+
+export const notificationController = new NotificationController();
