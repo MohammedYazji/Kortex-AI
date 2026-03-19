@@ -9,6 +9,8 @@ router
   .post(notificationController.createNotification)
   .delete(notificationController.clearAllNotifications);
 
+router.get("/categorized", notificationController.getCategorized);
+
 router
   .route("/:id")
   .get(notificationController.getNotification)

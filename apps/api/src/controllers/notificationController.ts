@@ -50,6 +50,12 @@ export class NotificationController {
     },
   );
 
+  // GET ALL NOTIFICATIONS FOR EACH CATEGORY
+  getCategorized = catchAsync(async (req: Request, res: Response) => {
+    const data = await notificationService.getCategorizedNotifications();
+    res.status(200).json({ status: "success", data });
+  });
+
   // GET NOTIFICATION BY ID
   public getNotification = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {

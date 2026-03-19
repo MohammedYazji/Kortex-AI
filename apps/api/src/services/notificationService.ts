@@ -99,6 +99,31 @@ export class NotificationService {
       .orderBy(desc(notifications.createdAt));
   }
 
+  // GETH ALL NOTIFICATIONS GROUPED BY CATEGORY
+  async getCategorizedNotifications() {
+    const all = await this.findAll();
+
+    const urgent = all.filter((n) => n.category === "urgent");
+    const normal = all.filter((n) => n.category === "normal");
+    const noise = all.filter((n) => n.category === "noise");
+
+    return {
+      urgent: {
+        data: urgent,
+        count: urgent.length,
+      },
+      normal: {
+        data: normal,
+        count: normal.length,
+      },
+      noise: {
+        data: noise,
+        count: noise.length,
+      },
+      totalCount: all.length,
+    };
+  }
+
   // GET NOTIFICATION BY ID
   async findById(id: number) {
     const [notification] = await db
