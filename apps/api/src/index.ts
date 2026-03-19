@@ -2,6 +2,7 @@ import express, { Response, Request, NextFunction } from "express";
 import cors from "cors";
 import { config } from "./config/env";
 import { globalErrorHandler } from "./middlewares/errorMiddleware";
+import { settingsService } from "./services/settingsService";
 import { AppError } from "./errors/AppError";
 import { notificationRoutes } from "./routes/notificationRoutes";
 import { settingsRouter } from "./routes/settingsRoutes";
@@ -19,6 +20,14 @@ const bootstrap = async () => {
   app.use("/api/v1/notifications", notificationRoutes);
   app.use("/api/v1/settings", settingsRouter);
   app.use("/api/v1/stats", statsRoutes);
+
+  // SET THE APP SETTINGS
+  try {
+    await settingsService.getCurrentSettings();
+    console.log("Default app settings initialized successfully.");
+  } catch (error) {
+    console.error("Failed to initialize settings on startup:", error);
+  }
 
   // HANDLE UNHANDLED ROUTES
   app.use((req: Request, res: Response, next: NextFunction) => {
