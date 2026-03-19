@@ -1,12 +1,28 @@
 import { eq } from "drizzle-orm";
 import { db } from "../db/database";
 import { appSettings, notifications } from "../db/schema";
+import { fa } from "zod/v4/locales";
 
 export class SettingsService {
   // GET THE CURRENT SETTINGS
   public async getCurrentSettings() {
-    const [settings] = await db.select().from(appSettings).limit(1);
-    return settings;
+    // Try to get the settings
+    let settings = await db.select().from(appSettings).limit(1);
+
+    // If the settings still empty (make the default focus status)
+    if (settings.length === 0) {
+      const [newSettings] = await db
+        .insert(appSettings)
+        .values({
+          id: 1,
+          isFocusModeEnabled: false,
+        })
+        .returning();
+
+      return newSettings;
+    }
+    // if the settings exists already return them
+    return settings[0];
   }
 
   // Turn on - off the focus mode
