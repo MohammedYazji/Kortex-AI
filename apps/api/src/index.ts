@@ -5,6 +5,7 @@ import { globalErrorHandler } from "./middlewares/errorMiddleware";
 import { AppError } from "./errors/AppError";
 import { notificationRoutes } from "./routes/notificationRoutes";
 import { settingsRouter } from "./routes/settingsRoutes";
+import { statsRoutes } from "./routes/statisticsRoutes";
 
 const bootstrap = async () => {
   // SETUP EXPRESS
@@ -17,6 +18,7 @@ const bootstrap = async () => {
   // ROUTES
   app.use("/api/v1/notifications", notificationRoutes);
   app.use("/api/v1/settings", settingsRouter);
+  app.use("/api/v1/stats", statsRoutes);
 
   // HANDLE UNHANDLED ROUTES
   app.use((req: Request, res: Response, next: NextFunction) => {
