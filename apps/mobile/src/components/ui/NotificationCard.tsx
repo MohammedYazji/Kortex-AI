@@ -1,36 +1,44 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-// TODO: Import your Category type and the CategoryBadge component you just built!
+import { Notification } from "../../types";
+import { CategoryBadge } from "./CategoryBadge";
 
 interface NotificationCardProps {
-  id: number;
-  appName: string;
-  // TODO: Add the rest of the missing props (title, body, category, createdAt)
-  // TODO: Add an optional 'onDismiss' function prop that takes an ID and returns nothing.
+  notification: Notification;
+  onDismiss?: (id: number) => void;
 }
 
 export function NotificationCard({
-  id,
-  appName,
-  // TODO: Destructure the rest of your props here!
+  notification,
+  onDismiss,
 }: NotificationCardProps) {
+  const { id, appName, title, body, category, createdAt } = notification;
+
   return (
-    // TODO: This is the main outer card container
     <View style={styles.card}>
-      {/* TODO: Create a View on the left side to hold an icon (e.g. the first letter of the appName) */}
-      <View style={styles.iconBox}>{/* Add Text here */}</View>
+      {/* Icon */}
+      <View style={styles.iconBox}>
+        <Text style={styles.iconText}>{appName[0]}</Text>
+      </View>
 
-      {/* TODO: Create a View on the right side to hold ALL the text content */}
+      {/* Content */}
       <View style={styles.content}>
-        {/* TODO: Add a row for the appName and the time. */}
+        <View style={styles.row}>
+          <Text style={styles.appName}>{appName}</Text>
+          <Text style={styles.time}>{createdAt}</Text>
+        </View>
 
-        {/* TODO: Conditionally render the 'title' Text ONLY if a title exists */}
+        {title && <Text style={styles.title}>{title}</Text>}
 
-        {/* TODO: Render the 'body' text. */}
+        <Text style={styles.body}>{body}</Text>
 
-        {/* TODO: Add your custom <CategoryBadge /> component here, passing it the 'category' prop */}
+        <CategoryBadge category={category} size="md" />
 
-        {/* TODO: Conditionally render a 'Dismiss' TouchableOpacity ONLY if the onDismiss function prop was provided */}
+        {onDismiss && (
+          <TouchableOpacity onPress={() => onDismiss(id)}>
+            <Text style={styles.dismiss}>Dismiss</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -38,14 +46,50 @@ export function NotificationCard({
 
 const styles = StyleSheet.create({
   card: {
-    // TODO: Arrange the icon box and the text content side-by-side (flexDirection: 'row')
-    // TODO: Add padding, margins, borders, and a nice dark background color!
+    flexDirection: "row",
+    padding: 12,
+    marginVertical: 6,
+    backgroundColor: "#1e1e1e",
+    borderRadius: 10,
   },
   iconBox: {
-    // TODO: Make this a circle!
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#333",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 10,
+  },
+  iconText: {
+    color: "white",
+    fontWeight: "bold",
   },
   content: {
-    // TODO: Make this take up all the remaining space on the right (flex: 1)
+    flex: 1,
   },
-  // TODO: Add the rest of your precise text sizes, weights, and colors here!
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  appName: {
+    color: "white",
+    fontWeight: "bold",
+  },
+  time: {
+    color: "gray",
+    fontSize: 12,
+  },
+  title: {
+    color: "white",
+    marginTop: 4,
+  },
+  body: {
+    color: "#ccc",
+    marginTop: 2,
+  },
+  dismiss: {
+    color: "red",
+    marginTop: 6,
+  },
 });

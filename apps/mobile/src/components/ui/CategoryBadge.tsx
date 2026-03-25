@@ -1,31 +1,68 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-// TODO: Import the Category type from your types file!
+import { Category } from "../../types";
 
 interface Props {
-  // TODO: Add a 'category' prop here. It should accept "urgent", "normal", or "noise".
-  // TODO: Add an optional 'size' prop ("sm" or "md").
+  category: Category;
+  size?: "sm" | "md";
 }
 
 export function CategoryBadge({ category, size = "sm" }: Props) {
-  // TODO: 1. Determine which background color to use based on the 'category' prop.
-  // TODO: 2. Determine which emoji to use ("🔴", "🟡", or "🔇").
-  // TODO: 3. Determine the text label based on the category ("Urgent", "Normal", "Noise").
+  const getColor = () => {
+    if (category === "urgent") return "#ff4d4d";
+    if (category === "normal") return "#4da6ff";
+    return "#999";
+  };
+
+  const getEmoji = () => {
+    if (category === "urgent") return "🔴";
+    if (category === "normal") return "🟡";
+    return "🔇";
+  };
+
+  const getLabel = () => {
+    if (category === "urgent") return "Urgent";
+    if (category === "normal") return "Normal";
+    return "Noise";
+  };
 
   return (
-    // TODO: Create a View wrapper containing your 'badge' style
-    <View style={styles.badge}>
-      {/* TODO: Add a <Text> component here to display the calculated emoji */}
+    <View
+      style={[
+        styles.badge,
+        { backgroundColor: getColor() },
+        size === "md" ? styles.md : styles.sm,
+      ]}
+    >
+      <Text style={styles.emoji}>{getEmoji()}</Text>
 
-      {/* TODO: Add a conditional render here! 
-          Only show the text label if the 'size' prop is NOT "sm" */}
+      {size !== "sm" && <Text style={styles.text}>{getLabel()}</Text>}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   badge: {
-    // TODO: Add your layout styles here!
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 20,
+    alignSelf: "flex-start",
   },
-  // TODO: Add styles for different sizes (sm vs md padding) and text fonts!
+  sm: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  md: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  emoji: {
+    fontSize: 12,
+    marginRight: 4,
+  },
+  text: {
+    color: "white",
+    fontSize: 12,
+    fontWeight: "bold",
+  },
 });
