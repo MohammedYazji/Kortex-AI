@@ -1,10 +1,19 @@
 import { Stack } from "expo-router";
+import { useEffect } from "react";
+import { getDatabase } from "../db/database";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 export default function RootLayout() {
+
+  useEffect(() => {
+    getDatabase();
+  }, []);
+
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      {/* سيوجهنا تلقائياً إلى مجلد (tabs) */}
-      <Stack.Screen name="(tabs)" />
-    </Stack>
+    <SafeAreaProvider>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(tabs)" />
+      </Stack>
+    </SafeAreaProvider>
   );
 }
