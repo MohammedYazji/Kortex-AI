@@ -1,6 +1,9 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, useColorScheme } from "react-native";
 import { Category } from "../../types";
+
+import Colors from "@/constants/Colors";
+import { useAppStore } from "@/store/appStore";
 
 interface Props {
   category: Category;
@@ -8,10 +11,22 @@ interface Props {
 }
 
 export function CategoryBadge({ category, size = "sm" }: Props) {
-  const getColor = () => {
-    if (category === "urgent") return "#ff4d4d";
-    if (category === "normal") return "#4da6ff";
-    return "#999";
+  const systemTheme = useColorScheme();
+  const { themeOverride } = useAppStore();
+
+  const theme =
+    themeOverride === "dark"
+      ? Colors.dark
+      : themeOverride === "light"
+        ? Colors.light
+        : systemTheme === "dark"
+          ? Colors.dark
+          : Colors.light;
+
+  const getLabel = () => {
+    if (category === "urgent") return "Urgent";
+    if (category === "normal") return "Normal";
+    return "Noise";
   };
 
   const getEmoji = () => {
@@ -20,23 +35,33 @@ export function CategoryBadge({ category, size = "sm" }: Props) {
     return "🔇";
   };
 
-  const getLabel = () => {
-    if (category === "urgent") return "Urgent";
-    if (category === "normal") return "Normal";
-    return "Noise";
+  const getBg = () => {
+    if (category === "urgent") return theme.urgentBg;
+    if (category === "normal") return theme.normalBg;
+    return theme.lowBg;
+  };
+
+  const getColor = () => {
+    if (category === "urgent") return theme.urgent;
+    if (category === "normal") return theme.normal;
+    return theme.textMuted;
   };
 
   return (
     <View
       style={[
         styles.badge,
-        { backgroundColor: getColor() },
+        { backgroundColor: getBg() },
         size === "md" ? styles.md : styles.sm,
       ]}
     >
       <Text style={styles.emoji}>{getEmoji()}</Text>
 
-      {size !== "sm" && <Text style={styles.text}>{getLabel()}</Text>}
+      {size !== "sm" && (
+        <Text style={[styles.text, { color: getColor() }]}>
+          {getLabel()}
+        </Text>
+      )}
     </View>
   );
 }
@@ -48,21 +73,24 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignSelf: "flex-start",
   },
+
   sm: {
     paddingHorizontal: 6,
     paddingVertical: 2,
   },
+
   md: {
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
+
   emoji: {
     fontSize: 12,
     marginRight: 4,
   },
+
   text: {
-    color: "white",
     fontSize: 12,
-    fontWeight: "bold",
+    fontWeight: "600",
   },
 });

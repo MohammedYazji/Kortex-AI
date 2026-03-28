@@ -1,7 +1,16 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { Notification } from "../../types";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  useColorScheme,
+} from "react-native";
+import type { Notification } from "../../types";
+
 import { CategoryBadge } from "./CategoryBadge";
+import Colors from "@/constants/Colors";
+import { useAppStore } from "@/store/appStore";
 
 interface NotificationCardProps {
   notification: Notification;
@@ -14,31 +23,83 @@ export function NotificationCard({
 }: NotificationCardProps) {
   const { id, appName, title, body, category, createdAt } = notification;
 
+  const systemTheme = useColorScheme();
+  const { themeOverride } = useAppStore();
+
+  const theme =
+    themeOverride === "dark"
+      ? Colors.dark
+      : themeOverride === "light"
+      ? Colors.light
+      : systemTheme === "dark"
+      ? Colors.dark
+      : Colors.light;
+
   return (
-    <View style={styles.card}>
+    <View
+      style={[
+        styles.card,
+        {
+          backgroundColor: theme.surface,
+          borderColor: theme.border,
+        },
+      ]}
+    >
       {/* Icon */}
-      <View style={styles.iconBox}>
-        <Text style={styles.iconText}>{appName[0]}</Text>
+      <View
+        style={[
+          styles.iconBox,
+          { backgroundColor: theme.tint },
+        ]}
+      >
+        <Text style={styles.iconText}>
+          {appName?.[0]?.toUpperCase()}
+        </Text>
       </View>
 
       {/* Content */}
       <View style={styles.content}>
         <View style={styles.row}>
-          <Text style={styles.appName}>{appName}</Text>
-          <Text style={styles.time}>{createdAt}</Text>
+          <Text style={[styles.appName, { color: theme.text }]}>
+            {appName}
+          </Text>
+          <Text style={[styles.time, { color: theme.textMuted }]}>
+            {createdAt}
+          </Text>
         </View>
 
-        {title && <Text style={styles.title}>{title}</Text>}
-
-        <Text style={styles.body}>{body}</Text>
-
-        <CategoryBadge category={category} size="md" />
-
-        {onDismiss && (
-          <TouchableOpacity onPress={() => onDismiss(id)}>
-            <Text style={styles.dismiss}>Dismiss</Text>
-          </TouchableOpacity>
+        {title && (
+          <Text style={[styles.title, { color: theme.text }]}>
+            {title}
+          </Text>
         )}
+
+        <Text style={[styles.body, { color: theme.textSecondary }]}>
+          {body}
+        </Text>
+
+        <View style={styles.footer}>
+          <CategoryBadge category={category} size="md" />
+
+          {onDismiss && (
+            <TouchableOpacity
+              onPress={() => onDismiss(id)}
+              style={[
+                styles.dismissButton,
+                { backgroundColor: theme.urgentBg },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.dismiss,
+                  { color: theme.urgent },
+                ]}
+              >
+                Dismiss
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
     </View>
   );
@@ -47,49 +108,79 @@ export function NotificationCard({
 const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
-    padding: 12,
-    marginVertical: 6,
-    backgroundColor: "#1e1e1e",
-    borderRadius: 10,
+    borderRadius: 18,
+    padding: 14,
+    marginVertical: 8,
+    borderWidth: 1,
+
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
+
   iconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#333",
-    justifyContent: "center",
+    width: 46,
+    height: 46,
+    borderRadius: 14,
     alignItems: "center",
-    marginRight: 10,
+    justifyContent: "center",
+    marginRight: 12,
   },
+
   iconText: {
-    color: "white",
-    fontWeight: "bold",
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 16,
   },
+
   content: {
     flex: 1,
   },
+
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
   },
+
   appName: {
-    color: "white",
-    fontWeight: "bold",
+    fontSize: 15,
+    fontWeight: "600",
   },
+
   time: {
-    color: "gray",
     fontSize: 12,
   },
+
   title: {
-    color: "white",
+    fontSize: 14,
+    fontWeight: "600",
     marginTop: 4,
   },
+
   body: {
-    color: "#ccc",
-    marginTop: 2,
+    fontSize: 13,
+    marginTop: 4,
+    lineHeight: 18,
   },
+
+  footer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 10,
+  },
+
+  dismissButton: {
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+  },
+
   dismiss: {
-    color: "red",
-    marginTop: 6,
+    fontSize: 12,
+    fontWeight: "600",
   },
 });
