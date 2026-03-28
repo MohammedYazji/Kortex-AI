@@ -39,23 +39,23 @@ async function initWeb(): Promise<boolean> {
 
   // Local JSON maps for tokenizer and model configuration
   const jsonFiles: Record<string, any> = {
-    "config.json": require("../../assets/model/config.json"),
-    "tokenizer_config.json": require("../../assets/model/tokenizer_config.json"),
-    "tokenizer.json": require("../../assets/model/tokenizer.json"),
-    "special_tokens_map.json": require("../../assets/model/special_tokens_map.json"),
+    "config.json": require("../../assets/model/distilbert/config.json"),
+    "tokenizer_config.json": require("../../assets/model/distilbert/tokenizer_config.json"),
+    "tokenizer.json": require("../../assets/model/distilbert/tokenizer.json"),
+    "special_tokens_map.json": require("../../assets/model/distilbert/special_tokens_map.json"),
   };
 
   // Download binary assets into memory via Expo Asset API
   const [vocabAsset, onnxAsset, wasmAsset, wasmSimdAsset] = await Promise.all([
-    Asset.fromModule(require("../../assets/model/vocab.txt")).downloadAsync(),
+    Asset.fromModule(require("../../assets/model/distilbert/vocab.txt")).downloadAsync(),
     Asset.fromModule(
-      require("../../assets/model/onnx/model_quantized.onnx"),
+      require("../../assets/model/distilbert/onnx/model_quantized.onnx"),
     ).downloadAsync(),
     Asset.fromModule(
-      require("../../assets/model/ort-wasm.wasm"),
+      require("../../assets/model/distilbert/ort-wasm.wasm"),
     ).downloadAsync(),
     Asset.fromModule(
-      require("../../assets/model/ort-wasm-simd.wasm"),
+      require("../../assets/model/distilbert/ort-wasm-simd.wasm"),
     ).downloadAsync(),
   ]);
 
@@ -117,7 +117,7 @@ async function initNative(): Promise<boolean> {
 
   // 1. Resolve local ONNX model file path
   console.log("[DEBUG] Locating ONNX Asset...");
-  const onnxAsset = require("../../assets/model/onnx/model_quantized.onnx");
+  const onnxAsset = require("../../assets/model/distilbert/onnx/model_quantized.onnx");
   const onnxRes = await Asset.fromModule(onnxAsset).downloadAsync();
   const modelUri = onnxRes.localUri ?? onnxRes.uri;
 
@@ -135,14 +135,14 @@ async function initNative(): Promise<boolean> {
   env.localModelPath = baseUrl;
 
   const jsonFiles: Record<string, any> = {
-    "config.json": require("../../assets/model/config.json"),
-    "tokenizer_config.json": require("../../assets/model/tokenizer_config.json"),
-    "tokenizer.json": require("../../assets/model/tokenizer.json"),
-    "special_tokens_map.json": require("../../assets/model/special_tokens_map.json"),
+    "config.json": require("../../assets/model/distilbert/config.json"),
+    "tokenizer_config.json": require("../../assets/model/distilbert/tokenizer_config.json"),
+    "tokenizer.json": require("../../assets/model/distilbert/tokenizer.json"),
+    "special_tokens_map.json": require("../../assets/model/distilbert/special_tokens_map.json"),
   };
 
   const vocabAsset = await Asset.fromModule(
-    require("../../assets/model/vocab.txt"),
+    require("../../assets/model/distilbert/vocab.txt"),
   ).downloadAsync();
   const vocabUri = vocabAsset.localUri ?? vocabAsset.uri;
 

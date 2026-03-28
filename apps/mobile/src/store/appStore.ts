@@ -5,7 +5,7 @@ import { getFocusModeSetting, setFocusModeSetting } from "../db/database";
 import type { AppStats, Rule } from "../types";
 
 // Type for theme: null means follow the mobile system settings
-type ThemeOverride = "dark" | "light" | null;
+type ThemeOverride = "dark" | "light";
 
 // The Blueprint for our global state
 interface AppState {
@@ -42,7 +42,7 @@ const defaultStats: AppStats = {
 // Create the actual Store hook (useAppStore)
 export const useAppStore = create<AppState>((set, get) => ({
   focusMode: false,
-  themeOverride: null,
+  themeOverride: "dark",
   stats: defaultStats,
   rules: [],
   isLoading: false,
@@ -77,11 +77,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   toggleTheme: () => {
     const { themeOverride } = get();
     const next: ThemeOverride =
-      themeOverride === null
-        ? "dark"
-        : themeOverride === "dark"
+        themeOverride === "dark"
           ? "light"
-          : null;
+          : "dark";
     set({ themeOverride: next });
   },
 

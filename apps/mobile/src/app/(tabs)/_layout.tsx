@@ -1,19 +1,50 @@
-import React from "react";
 import { Tabs } from "expo-router";
 import { FontAwesome } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useColorScheme } from "react-native";
+
+import Colors from "@/constants/Colors";
+import { useAppStore } from "@/store/appStore";
 
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
+  const systemTheme = useColorScheme();
+  const { themeOverride } = useAppStore();
+
+  const theme =
+    themeOverride === "dark"
+      ? Colors.dark
+      : themeOverride === "light"
+      ? Colors.light
+      : systemTheme === "dark"
+      ? Colors.dark
+      : Colors.light;
+
   return (
-    <Tabs screenOptions={{ tabBarActiveTintColor: "#007AFF" }}>
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: theme.tint,
+        tabBarInactiveTintColor: theme.tabIconDefault,
+        tabBarStyle: {
+          height: 60 + insets.bottom,
+          paddingBottom: insets.bottom,
+          paddingTop: 6,
+          backgroundColor: theme.surface,
+          borderTopColor: theme.border,
+        },
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
           title: "Dashboard",
           tabBarIcon: ({ color }) => (
-            <FontAwesome name="dashboard" size={24} color={color} />
+            <FontAwesome name="home" size={24} color={color} />
           ),
         }}
       />
+
       <Tabs.Screen
         name="inbox"
         options={{
@@ -23,6 +54,7 @@ export default function TabLayout() {
           ),
         }}
       />
+
       <Tabs.Screen
         name="delayed"
         options={{
@@ -32,6 +64,7 @@ export default function TabLayout() {
           ),
         }}
       />
+
       <Tabs.Screen
         name="settings"
         options={{
