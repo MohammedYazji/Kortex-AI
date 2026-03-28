@@ -27,9 +27,9 @@ export default {
     overlay: "rgba(0,0,0,0.6)",
   },
   light: {
-    background: "#F0F4FF",
+    background: "#f3efef",
     surface: "#FFFFFF",
-    surfaceElevated: "#FFFFFF",
+    surfaceElevated: "#FAFBFF",
     border: "#E2E8F0",
     text: "#0A0E1A",
     textSecondary: "#4A5A7A",
