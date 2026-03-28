@@ -1,31 +1,96 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
-// TODO: Import the Category type from your types file!
+import { StyleSheet, Text, View, useColorScheme } from "react-native";
+import { Category } from "../../types";
+
+import Colors from "@/constants/Colors";
+import { useAppStore } from "@/store/appStore";
 
 interface Props {
-  // TODO: Add a 'category' prop here. It should accept "urgent", "normal", or "noise".
-  // TODO: Add an optional 'size' prop ("sm" or "md").
+  category: Category;
+  size?: "sm" | "md";
 }
 
 export function CategoryBadge({ category, size = "sm" }: Props) {
-  // TODO: 1. Determine which background color to use based on the 'category' prop.
-  // TODO: 2. Determine which emoji to use ("🔴", "🟡", or "🔇").
-  // TODO: 3. Determine the text label based on the category ("Urgent", "Normal", "Noise").
+  const systemTheme = useColorScheme();
+  const { themeOverride } = useAppStore();
+
+  const theme =
+    themeOverride === "dark"
+      ? Colors.dark
+      : themeOverride === "light"
+        ? Colors.light
+        : systemTheme === "dark"
+          ? Colors.dark
+          : Colors.light;
+
+  const getLabel = () => {
+    if (category === "urgent") return "Urgent";
+    if (category === "normal") return "Normal";
+    return "Noise";
+  };
+
+  const getEmoji = () => {
+    if (category === "urgent") return "🔴";
+    if (category === "normal") return "🟡";
+    return "🔇";
+  };
+
+  const getBg = () => {
+    if (category === "urgent") return theme.urgentBg;
+    if (category === "normal") return theme.normalBg;
+    return theme.lowBg;
+  };
+
+  const getColor = () => {
+    if (category === "urgent") return theme.urgent;
+    if (category === "normal") return theme.normal;
+    return theme.textMuted;
+  };
 
   return (
-    // TODO: Create a View wrapper containing your 'badge' style
-    <View style={styles.badge}>
-      {/* TODO: Add a <Text> component here to display the calculated emoji */}
+    <View
+      style={[
+        styles.badge,
+        { backgroundColor: getBg() },
+        size === "md" ? styles.md : styles.sm,
+      ]}
+    >
+      <Text style={styles.emoji}>{getEmoji()}</Text>
 
-      {/* TODO: Add a conditional render here! 
-          Only show the text label if the 'size' prop is NOT "sm" */}
+      {size !== "sm" && (
+        <Text style={[styles.text, { color: getColor() }]}>
+          {getLabel()}
+        </Text>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   badge: {
-    // TODO: Add your layout styles here!
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 20,
+    alignSelf: "flex-start",
   },
-  // TODO: Add styles for different sizes (sm vs md padding) and text fonts!
+
+  sm: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+
+  md: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+
+  emoji: {
+    fontSize: 12,
+    marginRight: 4,
+  },
+
+  text: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
 });
