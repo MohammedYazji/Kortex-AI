@@ -1,9 +1,20 @@
+import Colors from "@/constants/Colors";
+import { useColorScheme } from "@/hooks/useColorScheme";
 import React from "react";
-import { StyleSheet, Text, View, useColorScheme } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { Category } from "../../types";
 
-import Colors from "@/constants/Colors";
-import { useAppStore } from "@/store/appStore";
+const EMOJIS: Record<Category, string> = {
+  urgent: "🔴",
+  normal: "🟡",
+  noise: "🔇",
+};
+
+const LABELS: Record<Category, string> = {
+  urgent: "Urgent",
+  normal: "Normal",
+  noise: "Noise",
+};
 
 interface Props {
   category: Category;
@@ -11,56 +22,37 @@ interface Props {
 }
 
 export function CategoryBadge({ category, size = "sm" }: Props) {
-  const systemTheme = useColorScheme();
-  const { themeOverride } = useAppStore();
+  const systemTheme = useColorScheme() ?? "dark";
+  const C = Colors[systemTheme];
+  const isSmall = size === "sm";
 
-  const theme =
-    themeOverride === "dark"
-      ? Colors.dark
-      : themeOverride === "light"
-        ? Colors.light
-        : systemTheme === "dark"
-          ? Colors.dark
-          : Colors.light;
+  const color =
+    category === "urgent"
+      ? C.urgent
+      : category === "normal"
+        ? C.normal
+        : C.noise;
 
-  const getLabel = () => {
-    if (category === "urgent") return "Urgent";
-    if (category === "normal") return "Normal";
-    return "Noise";
-  };
-
-  const getEmoji = () => {
-    if (category === "urgent") return "🔴";
-    if (category === "normal") return "🟡";
-    return "🔇";
-  };
-
-  const getBg = () => {
-    if (category === "urgent") return theme.urgentBg;
-    if (category === "normal") return theme.normalBg;
-    return theme.lowBg;
-  };
-
-  const getColor = () => {
-    if (category === "urgent") return theme.urgent;
-    if (category === "normal") return theme.normal;
-    return theme.textMuted;
-  };
+  const bg =
+    category === "urgent"
+      ? C.urgentBg
+      : category === "normal"
+        ? C.normalBg
+        : C.noiseBg;
 
   return (
     <View
       style={[
         styles.badge,
-        { backgroundColor: getBg() },
-        size === "md" ? styles.md : styles.sm,
+        { backgroundColor: bg },
+        isSmall ? styles.sm : styles.md,
       ]}
     >
-      <Text style={styles.emoji}>{getEmoji()}</Text>
-
-      {size !== "sm" && (
-        <Text style={[styles.text, { color: getColor() }]}>
-          {getLabel()}
-        </Text>
+      <Text style={isSmall ? styles.emojiSm : styles.emojiMd}>
+        {EMOJIS[category]}
+      </Text>
+      {!isSmall && (
+        <Text style={[styles.text, { color }]}>{LABELS[category]}</Text>
       )}
     </View>
   );
@@ -72,25 +64,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 20,
     alignSelf: "flex-start",
+    gap: 4,
   },
-
   sm: {
     paddingHorizontal: 6,
     paddingVertical: 2,
   },
-
   md: {
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
 
-  emoji: {
-    fontSize: 12,
-    marginRight: 4,
-  },
+  emojiSm: { fontSize: 12 },
+  emojiMd: { fontSize: 14 },
 
   text: {
     fontSize: 12,
-    fontWeight: "600",
+    fontFamily: "Inter_600SemiBold",
   },
 });

@@ -3,6 +3,8 @@ const accentDim = "#00A390";
 const urgent = "#FF453A";
 const normal = "#FF9F0A";
 const low = "#32D74B";
+const noise = "#8A9BBE";
+const info = "#32ADE6";
 
 export default {
   dark: {
@@ -20,16 +22,21 @@ export default {
     urgent,
     normal,
     low,
+    noise,
+    info,
     urgentBg: "rgba(255,69,58,0.15)",
     normalBg: "rgba(255,159,10,0.15)",
     lowBg: "rgba(50,215,75,0.15)",
+    noiseBg: "rgba(138,155,190,0.15)",
     card: "#141A29",
     overlay: "rgba(0,0,0,0.6)",
+    whiteText: "#FFFFFF",
+    onTint: "#0A0E1A",
   },
   light: {
-    background: "#f3efef",
+    background: "#F0F4FF",
     surface: "#FFFFFF",
-    surfaceElevated: "#FAFBFF",
+    surfaceElevated: "#FFFFFF",
     border: "#E2E8F0",
     text: "#0A0E1A",
     textSecondary: "#4A5A7A",
@@ -41,10 +48,15 @@ export default {
     urgent,
     normal,
     low,
+    noise,
+    info,
     urgentBg: "rgba(255,59,48,0.10)",
     normalBg: "rgba(255,149,0,0.10)",
     lowBg: "rgba(52,199,89,0.10)",
+    noiseBg: "rgba(138,155,190,0.15)",
     card: "#FFFFFF",
     overlay: "rgba(0,0,0,0.4)",
+    whiteText: "#FFFFFF",
+    onTint: "#0A0E1A",
   },
 };

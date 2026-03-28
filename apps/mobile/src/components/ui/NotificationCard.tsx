@@ -1,105 +1,97 @@
-import React from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  useColorScheme,
-} from "react-native";
-import type { Notification } from "../../types";
-
-import { CategoryBadge } from "./CategoryBadge";
 import Colors from "@/constants/Colors";
-import { useAppStore } from "@/store/appStore";
+import { useColorScheme } from "@/hooks/useColorScheme";
+import { Category } from "@/types";
+import { Ionicons } from "@expo/vector-icons";
+import React from "react";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { CategoryBadge } from "./CategoryBadge";
 
 interface NotificationCardProps {
-  notification: Notification;
+  id: number;
+  appName: string;
+  title: string | null;
+  body: string;
+  category: Category;
+  createdAt: string;
   onDismiss?: (id: number) => void;
+  onRelease?: (id: number) => void;
+  reasoning?: string;
 }
 
 export function NotificationCard({
-  notification,
+  id,
+  appName,
+  title,
+  body,
+  category,
+  createdAt,
   onDismiss,
+  onRelease,
+  reasoning,
 }: NotificationCardProps) {
-  const { id, appName, title, body, category, createdAt } = notification;
-
   const systemTheme = useColorScheme();
-  const { themeOverride } = useAppStore();
-
-  const theme =
-    themeOverride === "dark"
-      ? Colors.dark
-      : themeOverride === "light"
-      ? Colors.light
-      : systemTheme === "dark"
-      ? Colors.dark
-      : Colors.light;
+  const C = Colors[systemTheme];
 
   return (
     <View
       style={[
         styles.card,
         {
-          backgroundColor: theme.surface,
-          borderColor: theme.border,
+          backgroundColor: C.surfaceElevated,
+          borderColor: C.border,
         },
       ]}
     >
       {/* Icon */}
-      <View
-        style={[
-          styles.iconBox,
-          { backgroundColor: theme.tint },
-        ]}
-      >
-        <Text style={styles.iconText}>
-          {appName?.[0]?.toUpperCase()}
-        </Text>
+      <View style={[styles.iconBox, { backgroundColor: C.tint }]}>
+        <Text style={styles.iconText}>{appName?.[0]?.toUpperCase()}</Text>
       </View>
 
       {/* Content */}
       <View style={styles.content}>
         <View style={styles.row}>
-          <Text style={[styles.appName, { color: theme.text }]}>
-            {appName}
+          <Text style={[styles.appName, { color: C.textSecondary }]}>
+            {appName.toUpperCase()}
           </Text>
-          <Text style={[styles.time, { color: theme.textMuted }]}>
-            {createdAt}
-          </Text>
+          <Text style={[styles.time, { color: C.textMuted }]}>{createdAt}</Text>
         </View>
 
+        {/* Title */}
         {title && (
-          <Text style={[styles.title, { color: theme.text }]}>
-            {title}
-          </Text>
+          <Text style={[styles.title, { color: C.text }]}>{title}</Text>
         )}
 
-        <Text style={[styles.body, { color: theme.textSecondary }]}>
-          {body}
-        </Text>
+        {/* Body */}
+        <Text style={[styles.body, { color: C.textSecondary }]}>{body}</Text>
 
+        {/* Tags Row */}
         <View style={styles.footer}>
           <CategoryBadge category={category} size="md" />
 
-          {onDismiss && (
+          {/* Action1 */}
+          {onRelease && (
             <TouchableOpacity
-              onPress={() => onDismiss(id)}
               style={[
-                styles.dismissButton,
-                { backgroundColor: theme.urgentBg },
+                styles.tag,
+                { backgroundColor: C.tint + "15", marginLeft: "auto" },
               ]}
+              onPress={() => onRelease(id)}
+              activeOpacity={0.7}
             >
-              <Text
-                style={[
-                  styles.dismiss,
-                  { color: theme.urgent },
-                ]}
-              >
-                Dismiss
-              </Text>
+              <Ionicons name="play-outline" size={12} color={C.tint} />
+              <Text style={[styles.tagText, { color: C.tint }]}>Release</Text>
             </TouchableOpacity>
           )}
         </View>
+        {/* Action2 */}
+        {onDismiss && (
+          <TouchableOpacity
+            onPress={() => onDismiss(id)}
+            style={[styles.dismissButton, { backgroundColor: C.urgentBg }]}
+          >
+            <Text style={[styles.dismiss, { color: C.urgent }]}>Dismiss</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -108,10 +100,11 @@ export function NotificationCard({
 const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
-    borderRadius: 18,
-    padding: 14,
-    marginVertical: 8,
+    borderRadius: 20,
+    padding: 16,
+    paddingRight: 16,
     borderWidth: 1,
+    marginBottom: 12,
 
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
@@ -121,12 +114,12 @@ const styles = StyleSheet.create({
   },
 
   iconBox: {
-    width: 46,
-    height: 46,
+    width: 44,
+    height: 44,
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 12,
+    marginRight: 14,
   },
 
   iconText: {
@@ -134,36 +127,34 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 16,
   },
-
   content: {
     flex: 1,
   },
-
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    marginBottom: 4,
   },
-
   appName: {
-    fontSize: 15,
-    fontWeight: "600",
-  },
-
-  time: {
     fontSize: 12,
+    fontFamily: "Inter_600SemiBold",
+    letterSpacing: 0.5,
   },
-
+  time: {
+    fontSize: 11,
+    fontFamily: "Inter_400Regular",
+  },
   title: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginTop: 4,
+    fontSize: 15,
+    fontFamily: "Inter_600SemiBold",
+    marginBottom: 4,
   },
-
   body: {
-    fontSize: 13,
-    marginTop: 4,
-    lineHeight: 18,
+    fontSize: 14,
+    fontFamily: "Inter_500Medium",
+    lineHeight: 20,
+    marginBottom: 10,
   },
 
   footer: {
@@ -181,6 +172,19 @@ const styles = StyleSheet.create({
 
   dismiss: {
     fontSize: 12,
-    fontWeight: "600",
+    fontFamily: "Inter_500Medium",
+  },
+
+  tag: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+  },
+  tagText: {
+    fontSize: 12,
+    fontFamily: "Inter_600SemiBold",
   },
 });
