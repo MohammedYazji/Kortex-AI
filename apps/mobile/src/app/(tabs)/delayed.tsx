@@ -1,79 +1,80 @@
-import { useEffect, useState } from "react";
+import { Feather } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
+import React, { useCallback, useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Pressable,
   Platform,
-  useWindowDimensions,
-  useColorScheme,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Feather } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
-
-import type { Notification } from "../../types";
-import Colors from "../../constants/Colors";
 import { NotificationCard } from "../../components/ui/NotificationCard";
-import { useAppStore } from "@/store/appStore";
+import Colors from "../../constants/Colors";
 import {
   getDelayed,
   releaseDelayed,
-  markRead,
+  releaseSingleDelayed,
 } from "../../db/notificationDao";
+import { useColorScheme } from "../../hooks/useColorScheme";
+import { useAppStore } from "../../store/appStore";
+import type { Notification } from "../../types";
 
 export default function DelayedScreen() {
-  const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
-  const isTablet = width > 768;
-
-  const { themeOverride, notificationVersion } = useAppStore();
   const systemTheme = useColorScheme();
+  const C = Colors[systemTheme ?? "light"];
+  const insets = useSafeAreaInsets();
 
-  const theme =
-    themeOverride === "dark"
-      ? Colors.dark
-      : themeOverride === "light"
-        ? Colors.light
-        : systemTheme === "dark"
-          ? Colors.dark
-          : Colors.light;
+  const notificationVersion = useAppStore((s) => s.notificationVersion);
+  const notifyDataChanged = useAppStore((s) => s.notifyDataChanged);
 
-  const [delayed, setDelayed] = useState<Notification[]>([]);
+  const [items, setItems] = useState<Notification[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const loadDelayed = async () => {
-    try {
-      const data = await getDelayed();
-      setDelayed(
-        data.sort(
-          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        )
-      );
-    } catch (e) {
-      console.error("Failed to load delayed notifications:", e);
-    }
-  };
+  const loadItems = useCallback(async () => {
+    const data = await getDelayed();
+    setItems(
+      data.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      ),
+    );
+  }, []);
 
   useEffect(() => {
-    loadDelayed();
-  }, [notificationVersion]);
+    loadItems();
+  }, [loadItems, notificationVersion]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadItems();
+    await notifyDataChanged();
+    setRefreshing(false);
+  };
 
   const handleReleaseAll = async () => {
+    if (items.length === 0) return;
     if (Platform.OS !== "web") {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
+    setItems([]);
     await releaseDelayed();
-    await loadDelayed();
+    await notifyDataChanged();
   };
 
-  const handleMarkRead = async (id: number) => {
-    await markRead(id);
-    await loadDelayed();
+  const handleRelease = async (id: number) => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    setItems((prev) => prev.filter((i) => i.id !== id));
+    await releaseSingleDelayed(id);
+    await notifyDataChanged();
   };
 
-  const hasDelayed = delayed.length > 0;
+  const hasItems = items.length > 0;
 
   const instructions = [
     { icon: "zap", text: "Enable focus mode on Dashboard" },
@@ -82,79 +83,117 @@ export default function DelayedScreen() {
   ];
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
-      {/* Header Section */}
-      <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
+    <View style={[styles.container, { backgroundColor: C.background }]}>
+      {/* HEADER */}
+      <View
+        style={[
+          styles.header,
+          { paddingTop: insets.top + (Platform.OS === "web" ? 67 : 20) },
+        ]}
+      >
         <View style={styles.headerRow}>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.title, { color: theme.text }]}>Delayed Inbox</Text>
-            <Text style={[styles.subtitle, { color: theme.textSecondary }]} numberOfLines={1}>
-              {hasDelayed ? `${delayed.length} notifications held` : "Nothing delayed right now"}
+            <Text style={[styles.title, { color: C.text }]}>Delayed Inbox</Text>
+            <Text style={[styles.subtitle, { color: C.textMuted }]}>
+              {hasItems
+                ? `${items.length} notifications held`
+                : "Nothing delayed right now"}
             </Text>
           </View>
 
-          {hasDelayed && (
+          {hasItems && (
             <Pressable
               onPress={handleReleaseAll}
               style={({ pressed }) => [
                 styles.releaseBtn,
                 {
-                  backgroundColor: theme.tint,
+                  backgroundColor: C.tint,
                   opacity: pressed ? 0.85 : 1,
                   transform: [{ scale: pressed ? 0.97 : 1 }],
                 },
               ]}
             >
-              <Feather name="unlock" size={16} color="#fff" />
+              <Feather name="unlock" size={14} color="#fff" />
               <Text style={styles.releaseBtnText}>Release All</Text>
             </Pressable>
           )}
         </View>
       </View>
 
-      {/* Content Section */}
+      {/* CONTENT */}
       <ScrollView
         contentContainerStyle={[
-          styles.content,
-          isTablet && styles.contentTablet,
-          !hasDelayed && { flexGrow: 1 },
+          styles.list,
+          !hasItems && { flexGrow: 1, justifyContent: "center" },
           { paddingBottom: insets.bottom + 100 },
         ]}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={C.tint}
+          />
+        }
       >
-        {!hasDelayed ? (
+        {!hasItems ? (
           <View style={styles.emptyWrapper}>
-            {/* Empty State */}
-            <View style={[styles.emptyBox, { backgroundColor: theme.surfaceElevated }]}>
+            <View
+              style={[
+                styles.emptyBox,
+                { backgroundColor: C.surface, borderColor: C.border },
+              ]}
+            >
               <Feather
                 name="clock"
-                size={50}
-                color={theme.tint}
+                size={44}
+                color={C.tint}
                 style={{ marginBottom: 16, alignSelf: "center" }}
               />
-              <Text style={[styles.emptyTitle, { color: theme.text }]}>
+              <Text style={[styles.emptyTitle, { color: C.text }]}>
                 Delayed inbox is empty
               </Text>
-              <Text style={[styles.emptySubtitle, { color: theme.textSecondary }]}>
-                When focus mode is active, non-urgent notifications will be held here until you're ready.
+              <Text style={[styles.emptySubtitle, { color: C.textMuted }]}>
+                When focus mode is active, non-urgent notifications will be held
+                here until you're ready.
               </Text>
 
-              {/* Instructions Card */}
-              <View style={[styles.instructionsBox]}>
+              <View
+                style={[styles.instructionsBox, { borderTopColor: C.border }]}
+              >
                 {instructions.map((item, idx) => (
                   <View key={idx} style={styles.instructionRow}>
-                    <Feather name={item.icon as any} size={18} color={theme.tint} style={{ marginRight: 12 }} />
-                    <Text style={[styles.instructionText, { color: theme.text }]}>{item.text}</Text>
+                    <Feather
+                      name={item.icon as any}
+                      size={16}
+                      color={C.tint}
+                      style={{ marginRight: 12 }}
+                    />
+                    <Text
+                      style={[
+                        styles.instructionText,
+                        { color: C.textSecondary },
+                      ]}
+                    >
+                      {item.text}
+                    </Text>
                   </View>
                 ))}
               </View>
             </View>
           </View>
         ) : (
-          // Delayed Notifications List
-          delayed.map((n) => (
-            <View key={n.id} style={[styles.cardWrapper, isTablet && styles.cardTablet]}>
-              <NotificationCard notification={n} onDismiss={handleMarkRead} />
+          items.map((item) => (
+            <View key={item.id} style={styles.cardWrapper}>
+              <NotificationCard
+                id={item.id}
+                appName={item.appName}
+                title={item.title}
+                body={item.body}
+                category={item.category}
+                createdAt={item.createdAt}
+                onRelease={handleRelease}
+              />
             </View>
           ))
         )}
@@ -165,49 +204,67 @@ export default function DelayedScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { paddingHorizontal: 20, paddingBottom: 12 },
-  headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  title: { fontSize: 26, fontWeight: "700" },
-  subtitle: { fontSize: 13, marginTop: 4 },
-  releaseBtn: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 16, elevation: 2 },
-  releaseBtnText: { fontSize: 13, fontWeight: "600", color: "#fff" },
-  content: { paddingHorizontal: 16, paddingTop: 10 },
-  contentTablet: { alignItems: "center" },
-  cardWrapper: { marginBottom: 12 },
-  cardTablet: { width: "100%", maxWidth: 700 },
+  header: { paddingHorizontal: 20, paddingBottom: 14 },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  title: { fontSize: 28, fontFamily: "Inter_700Bold", letterSpacing: -0.8 },
+  subtitle: { fontSize: 13, fontFamily: "Inter_400Regular", marginTop: 2 },
+  releaseBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  releaseBtnText: {
+    fontSize: 13,
+    fontFamily: "Inter_600SemiBold",
+    color: "#fff",
+  },
+  list: { paddingHorizontal: 20, paddingTop: 10 },
+  cardWrapper: { marginBottom: 4 },
 
-  //  Empty State 
-  emptyWrapper: { flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 20 },
+  // Empty State Styles
+  emptyWrapper: { alignItems: "center", paddingHorizontal: 4 },
   emptyBox: {
     width: "100%",
-    maxWidth: 520,
-    borderRadius: 20,
-    paddingVertical: 28,
+    borderRadius: 24,
+    paddingVertical: 32,
     paddingHorizontal: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 5,
     borderWidth: 1,
-    borderColor: "#e0e0e0",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 2,
   },
-  emptyTitle: { fontSize: 24, fontWeight: "700", marginBottom: 10, textAlign: "center" },
-  emptySubtitle: { fontSize: 15, textAlign: "center", marginBottom: 18, lineHeight: 24 },
-
-  instructionsBox: {
-    backgroundColor: "transparent",
-    borderTopWidth: 1,
-    borderTopColor: "#d0d0d0",
-    paddingTop: 16,
+  emptyTitle: {
+    fontSize: 20,
+    fontFamily: "Inter_700Bold",
+    marginBottom: 10,
+    textAlign: "center",
   },
+  emptySubtitle: {
+    fontSize: 14,
+    fontFamily: "Inter_400Regular",
+    textAlign: "center",
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  instructionsBox: { borderTopWidth: 1, paddingTop: 20 },
   instructionRow: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 14,
   },
-  instructionText: {
-    fontSize: 15,
-    lineHeight: 22,
-  },
+  instructionText: { fontSize: 14, fontFamily: "Inter_400Regular" },
 });
