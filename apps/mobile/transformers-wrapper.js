@@ -6,4 +6,4 @@ if (typeof self === "undefined") {
   global.self = global;
 }
 
-module.exports = require("./node_modules/@xenova/transformers/dist/transformers.js");
+module.exports = require("@xenova/transformers/dist/transformers.js");
