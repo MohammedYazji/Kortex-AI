@@ -100,11 +100,10 @@ export function NotificationCard({
 const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
-    borderRadius: 20,
-    padding: 16,
-    paddingRight: 16,
+    borderRadius: 18,
+    padding: 14,
+    marginVertical: 8,
     borderWidth: 1,
-    marginBottom: 12,
 
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
@@ -114,12 +113,12 @@ const styles = StyleSheet.create({
   },
 
   iconBox: {
-    width: 44,
-    height: 44,
+    width: 46,
+    height: 46,
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 14,
+    marginRight: 12,
   },
 
   iconText: {
@@ -127,15 +126,17 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 16,
   },
+
   content: {
     flex: 1,
   },
+
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 4,
   },
+
   appName: {
     fontSize: 12,
     fontFamily: "Inter_600SemiBold",
