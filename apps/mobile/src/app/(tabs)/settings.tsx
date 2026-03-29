@@ -1,409 +1,615 @@
-import { Feather } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
-import React, { useEffect, useState } from "react";
+import { Feather, Ionicons } from "@expo/vector-icons";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Alert,
-  Platform,
-  Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
-  useColorScheme,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
 import Colors from "../../constants/Colors";
-import { getAllRules, insertRule, deleteRule } from "../../db/rulesDao";
 import { clearAll } from "../../db/notificationDao";
+import { deleteRule, insertRule } from "../../db/rulesDao";
+import { useColorScheme } from "../../hooks/useColorScheme";
 import { useAppStore } from "../../store/appStore";
-import ThemeToggleButton from "../../components/ui/ThemeToggleButton";
 
+/**
+ * SettingsScreen (settings.tsx)
+ *
+ * Allows users to configure custom block/allow rules for specific contacts and apps.
+ * Rules explicitly override the AI's default classification (e.g. marking "Mom" as urgent).
+ * Includes app-wide data controls like clearing the notification history database,
+ * and a legend explaining how the AI categorizes notifications.
+ */
 export default function SettingsScreen() {
+  const scheme = useColorScheme();
+  const C = Colors[scheme];
   const insets = useSafeAreaInsets();
-  const systemTheme = useColorScheme();
-  const { themeOverride, rules, loadRules } = useAppStore();
 
-  const theme =
-    themeOverride === "dark"
-      ? Colors.dark
-      : themeOverride === "light"
-        ? Colors.light
-        : systemTheme === "dark"
-          ? Colors.dark
-          : Colors.light;
+  const rules = useAppStore((s) => s.rules);
+  const loadRules = useAppStore((s) => s.loadRules);
+  const notifyDataChanged = useAppStore((s) => s.notifyDataChanged);
+  const themeOverride = useAppStore((s) => s.themeOverride);
+  const toggleTheme = useAppStore((s) => s.toggleTheme);
 
-  const [contactInput, setContactInput] = useState("");
-  const [appInput, setAppInput] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
 
-  const contactSuggestions = ["Mom", "Dad", "Partner", "Doctor", "Boss"];
-  const appSuggestions = [
-    "WhatsApp",
-    "Outlook",
-    "Gmail",
-    "Teams",
-    "Slack",
-    "LinkedIn",
-    "Instagram",
-  ];
+  const [newContact, setNewContact] = useState("");
+  const [newApp, setNewApp] = useState("");
 
-  const addedContacts = rules.filter(r => r.type === "contact").map(r => r.value);
-  const addedApps = rules.filter(r => r.type === "app").map(r => r.value);
-
-  useEffect(() => {
-    loadRules();
+  /**
+   * Loads custom rules and statistics metrics from SQLite bindings
+   */
+  const loadData = useCallback(async () => {
+    await loadRules();
   }, []);
 
-  const handleAddRule = async (type: "app" | "contact", value?: string) => {
-    const val = (type === "app" ? appInput : contactInput).trim() || value?.trim();
-    if (!val) return;
+  // Hydrate the screen initially
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
+  /**
+   * Manual refresh payload that syncs local DB into Zustand
+   */
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  };
+
+  /**
+   * Inserts a new Contact rule into the DB.
+   * It forces the AI to always classify messages from this contact as "urgent".
+   */
+  const handleAddContact = async () => {
+    if (!newContact.trim()) return;
     await insertRule({
-      type,
-      value: val,
+      type: "contact",
+      value: newContact.trim(),
       forcedCategory: "urgent",
     });
-
-    if (type === "app") setAppInput("");
-    else setContactInput("");
-
-    loadRules();
+    setNewContact("");
+    await loadRules();
   };
 
+  /**
+   * Inserts a new App rule into the DB.
+   * Notifications from this app will bypass Focus Mode delays entirely.
+   */
+  const handleAddApp = async () => {
+    if (!newApp.trim()) return;
+    await insertRule({
+      type: "app",
+      value: newApp.trim(),
+      forcedCategory: "urgent",
+    });
+    setNewApp("");
+    await loadRules();
+  };
+
+  /**
+   * Confirms and deletes a custom priority rule globally.
+   */
   const handleDeleteRule = async (id: number) => {
-    await deleteRule(id);
-    loadRules();
+    Alert.alert(
+      "Remove Rule",
+      "Are you sure you want to remove this priority rule?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Remove",
+          style: "destructive",
+          onPress: async () => {
+            await deleteRule(id);
+            await loadRules();
+          },
+        },
+      ],
+    );
   };
 
-  const handleClear = () => {
-    Alert.alert("Confirm", "Delete all notifications?", [
-      { text: "Cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          if (Platform.OS !== "web") {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-          }
-          await clearAll();
-        },
-      },
-    ]);
+  /**
+   * Wipes all persisted notification records directly from SQLite.
+   * Bypasses `Alert` confirmation blocks to avoid OS-level gesture/bridge dropping bugs.
+   * Updates global app state to zero immediately upon returning.
+   */
+  const handleClearAll = async () => {
+    try {
+      await clearAll();
+      await notifyDataChanged();
+      Alert.alert("Cleared", "Notification history permanently deleted.");
+    } catch (e: any) {
+      Alert.alert("Error clearing data", e.message);
+    }
   };
+
+  // Pre-filter rules to render in the chips layout
+  const contactRules = rules.filter((r) => r.type === "contact");
+  const appRules = rules.filter((r) => r.type === "app");
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: theme.background }]}
-      contentContainerStyle={{
-        paddingTop: insets.top + 20,
-        paddingBottom: insets.bottom + 40,
-        paddingHorizontal: 16,
-      }}
-    >
-      {/* HEADER */}
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: theme.text }]}>Settings</Text>
-        <ThemeToggleButton />
+    <View style={[styles.root, { backgroundColor: C.background }]}>
+      {/* Header */}
+      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
+        <Text style={[styles.headerTitle, { color: C.text }]}>Settings</Text>
       </View>
 
-      {/* INFO HEADER */}
-      <View style={[styles.infoHeader, { backgroundColor: theme.surface }]}>
-        <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 10, marginBottom: 4 }}>
-          <View style={{ backgroundColor: theme.surfaceElevated, padding: 8, borderRadius: 10 }}>
-            <Feather name="cpu" size={20} color={theme.tint} />
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={C.tint}
+          />
+        }
+      >
+        {/* AI Info Card - Centered Version */}
+        <View
+          style={[
+            styles.aiCard,
+            {
+              backgroundColor: C.surfaceElevated,
+              borderColor: C.border,
+              flexDirection: "column",
+              alignItems: "center",
+              paddingVertical: 24,
+            },
+          ]}
+        >
+          <View
+            style={[
+              styles.aiIcon,
+              {
+                backgroundColor: C.surface,
+                borderColor: C.border,
+                marginBottom: 12,
+              },
+            ]}
+          >
+            <Ionicons name="hardware-chip-outline" size={28} color={C.tint} />
           </View>
-          <View style={[styles.infoDes, { flex: 1 }]}>
-            <Text style={[styles.infoTitle, { color: theme.text }]}>
-              On-Device AI Classification
+
+          <View style={{ alignItems: "center" }}>
+            <Text
+              style={[
+                styles.aiTitle,
+                { color: C.text, fontSize: 17, marginBottom: 8 },
+              ]}
+            >
+              Kortex AI Classification Engine
             </Text>
-            <Text style={[styles.infoDesc, { color: theme.textSecondary }]} numberOfLines={0}>
-              All notifications are automatically classified on your device. Context, contacts, and content
-              are analyzed to decide urgency, while your privacy is fully protected.
+            <Text
+              style={[
+                styles.aiSub,
+                {
+                  color: C.textSecondary,
+                  textAlign: "center",
+                  lineHeight: 20,
+                  paddingHorizontal: 10,
+                },
+              ]}
+            >
+              All notifications are classified using our custom{" "}
+              <Text style={{ fontWeight: "600", color: C.tint }}>
+                DistilBERT
+              </Text>{" "}
+              model trained to detect Urgent, Normal, and Noise patterns.
+              {"\n\n"}
+              Everything is processed{" "}
+              <Text style={{ fontWeight: "600", color: C.text }}>
+                locally on your phone
+              </Text>{" "}
+              to ensure your absolute privacy. Context, contacts, and content
+              never leave your device.
             </Text>
           </View>
         </View>
-      </View>
+        {/* Appearance */}
+        <Text style={[styles.sectionTitle, { color: C.textMuted }]}>
+          APPEARANCE
+        </Text>
+        <View
+          style={[
+            styles.card,
+            {
+              backgroundColor: C.surface,
+              borderColor: C.border,
+              padding: 0,
+              overflow: "hidden",
+            },
+          ]}
+        >
+          <TouchableOpacity
+            style={[styles.themeRow, { borderBottomColor: C.border }]}
+            onPress={toggleTheme}
+            activeOpacity={0.7}
+          >
+            <View
+              style={[styles.themeIconWrap, { backgroundColor: C.tint + "15" }]}
+            >
+              <Feather
+                name={
+                  themeOverride === "light"
+                    ? "sun"
+                    : themeOverride === "dark"
+                      ? "moon"
+                      : "monitor"
+                }
+                size={20}
+                color={C.tint}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.themeTitle, { color: C.text }]}>
+                Appearance
+              </Text>
+              <Text style={[styles.themeSub, { color: C.textSecondary }]}>
+                {themeOverride === "light"
+                  ? "Light mode"
+                  : themeOverride === "dark"
+                    ? "Dark mode"
+                    : "Follow system"}
+              </Text>
+            </View>
+            <View
+              style={[
+                styles.themeChip,
+                { backgroundColor: C.surfaceElevated, borderColor: C.border },
+              ]}
+            >
+              <Text style={[styles.themeChipText, { color: C.textSecondary }]}>
+                {themeOverride === "light"
+                  ? "☀️ Light"
+                  : themeOverride === "dark"
+                    ? "🌙 Dark"
+                    : "⚙️ System"}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        </View>
 
-      {/* PRIORITY CONTACTS */}
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>
+        {/* Priority Contacts */}
+        <Text style={[styles.sectionTitle, { color: C.textMuted }]}>
           PRIORITY CONTACTS
         </Text>
-        <Text style={{ color: theme.textSecondary, fontSize: 12, marginBottom: 8 }}>
-          Messages from these contacts are always marked as urgent.
-        </Text>
-
-        <View style={[styles.card, { backgroundColor: theme.surface }]}>
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: C.surface, borderColor: C.border },
+          ]}
+        >
+          <Text style={[styles.cardDesc, { color: C.textSecondary }]}>
+            Messages from these contacts are always marked as urgent.
+          </Text>
           <View style={styles.inputRow}>
             <TextInput
-              value={contactInput}
-              onChangeText={setContactInput}
-              placeholder="Add contact name..."
-              placeholderTextColor={theme.textMuted}
               style={[
                 styles.input,
-                { color: theme.text, borderColor: theme.border, backgroundColor: theme.surfaceElevated },
+                {
+                  backgroundColor: C.background,
+                  color: C.text,
+                  borderColor: C.border,
+                },
               ]}
+              placeholder="Add contact name..."
+              placeholderTextColor={C.textMuted}
+              value={newContact}
+              onChangeText={setNewContact}
             />
-            <Pressable onPress={() => handleAddRule("contact")} style={[styles.addBtn, { backgroundColor: theme.tint }]}>
-              <Feather name="plus" size={18} color="#fff" />
-            </Pressable>
+            <TouchableOpacity
+              style={[styles.addBtn, { backgroundColor: C.tint }]}
+              onPress={handleAddContact}
+            >
+              <Ionicons name="add" size={24} color="#0A0D14" />
+            </TouchableOpacity>
           </View>
-
-          {/* Suggestions */}
-          <View style={styles.chips}>
-            {contactSuggestions
-              .filter(c => !addedContacts.includes(c))
-              .map((c) => (
-                <Pressable
-                  key={c}
-                  onPress={() => handleAddRule("contact", c)}
-                  style={[styles.suggestionChip, { backgroundColor: theme.surfaceElevated }]}
-                >
-                  <Text style={{ color: theme.text }}>{c}</Text>
-                </Pressable>
-              ))}
-          </View>
-
-          {/* Added contacts */}
-          <View style={styles.chips}>
-            {addedContacts.map((c) => {
-              const rule = rules.find(r => r.type === "contact" && r.value === c);
-              return (
-                <Pressable
-                  key={c}
-                  onPress={() => handleDeleteRule(rule!.id)}
-                  style={[styles.suggestionChip, { backgroundColor: theme.surfaceElevated }]}
-                >
-                  <Text style={{ color: theme.text }}>+ {c}</Text>
-                </Pressable>
-              );
-            })}
+          <View style={styles.chipWrap}>
+            {contactRules.length === 0 && newContact === "" && (
+              <Text style={[styles.emptyHint, { color: C.textMuted }]}>
+                No priority contacts added.
+              </Text>
+            )}
+            {contactRules.map((r) => (
+              <TouchableOpacity
+                key={r.id}
+                style={[
+                  styles.chip,
+                  { backgroundColor: C.surfaceElevated, borderColor: C.border },
+                ]}
+                onPress={() => handleDeleteRule(r.id)}
+              >
+                <Text style={[styles.chipText, { color: C.textSecondary }]}>
+                  ✓ {r.value}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
-      </View>
 
-      {/* PRIORITY APPS */}
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>
+        {/* Priority Apps */}
+        <Text style={[styles.sectionTitle, { color: C.textMuted }]}>
           PRIORITY APPS
         </Text>
-        <Text style={{ color: theme.textSecondary, fontSize: 12, marginBottom: 8 }}>
-          Notifications from these apps always pass through, even in focus mode.
-        </Text>
-
-        <View style={[styles.card, { backgroundColor: theme.surface }]}>
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: C.surface, borderColor: C.border },
+          ]}
+        >
+          <Text style={[styles.cardDesc, { color: C.textSecondary }]}>
+            Notifications from these apps always pass through, even in focus
+            mode.
+          </Text>
           <View style={styles.inputRow}>
             <TextInput
-              value={appInput}
-              onChangeText={setAppInput}
-              placeholder="Add app name..."
-              placeholderTextColor={theme.textMuted}
               style={[
                 styles.input,
-                { color: theme.text, borderColor: theme.border, backgroundColor: theme.surfaceElevated },
+                {
+                  backgroundColor: C.background,
+                  color: C.text,
+                  borderColor: C.border,
+                },
               ]}
+              placeholder="Add app name..."
+              placeholderTextColor={C.textMuted}
+              value={newApp}
+              onChangeText={setNewApp}
             />
-            <Pressable onPress={() => handleAddRule("app")} style={[styles.addBtn, { backgroundColor: theme.tint }]}>
-              <Feather name="plus" size={18} color="#fff" />
-            </Pressable>
+            <TouchableOpacity
+              style={[styles.addBtn, { backgroundColor: C.tint }]}
+              onPress={handleAddApp}
+            >
+              <Ionicons name="add" size={24} color="#0A0D14" />
+            </TouchableOpacity>
           </View>
-
-          {/* Suggestions */}
-          <View style={styles.chips}>
-            {appSuggestions
-              .filter(a => !addedApps.includes(a))
-              .map((a) => (
-                <Pressable
-                  key={a}
-                  onPress={() => handleAddRule("app", a)}
-                  style={[styles.suggestionChip, { backgroundColor: theme.surfaceElevated }]}
-                >
-                  <Text style={{ color: theme.text }}>{a}</Text>
-                </Pressable>
-              ))}
-          </View>
-
-          {/* Added apps */}
-          <View style={styles.chips}>
-            {addedApps.map((a) => {
-              const rule = rules.find(r => r.type === "app" && r.value === a);
-              return (
-                <Pressable
-                  key={a}
-                  onPress={() => handleDeleteRule(rule!.id)}
-                  style={[styles.suggestionChip, { backgroundColor: theme.surfaceElevated }]}
-                >
-                  <Text style={{ color: theme.text }}>+ {a}</Text>
-                </Pressable>
-              );
-            })}
+          <View style={styles.chipWrap}>
+            {appRules.length === 0 && newApp === "" && (
+              <Text style={[styles.emptyHint, { color: C.textMuted }]}>
+                No priority apps added.
+              </Text>
+            )}
+            {appRules.map((r) => (
+              <TouchableOpacity
+                key={r.id}
+                style={[
+                  styles.chip,
+                  { backgroundColor: C.surfaceElevated, borderColor: C.border },
+                ]}
+                onPress={() => handleDeleteRule(r.id)}
+              >
+                <Text style={[styles.chipText, { color: C.textSecondary }]}>
+                  ✓ {r.value}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
-      </View>
 
-      {/* HOW AI CLASSIFIES */}
-      <View style={[styles.card, { backgroundColor: theme.surface }]}>
-        <Row
-          title="Urgent → Allow"
-          desc="Emergency messages, priority contacts, health & safety"
-          theme={theme}
-          iconName="alert-circle"
-          iconColor="#ef4444"
-        />
-        <Divider theme={theme} />
-        <Row
-          title="Normal → Delay"
-          desc="Regular messages, emails, social media from known contacts"
-          theme={theme}
-          iconName="clock"
-          iconColor="#fbbf24"
-        />
-        <Divider theme={theme} />
-        <Row
-          title="Noise → Silence"
-          desc="Promotions, spam, entertainment, engagement bait"
-          theme={theme}
-          iconName="volume-x"
-          iconColor="#6b7280"
-        />
-      </View>
-
-      {/* CLEAR DATA */}
-      <View style={styles.section}>
-        <Pressable
-          onPress={handleClear}
-          style={[styles.dangerBtn, { backgroundColor: theme.urgent }]}
+        {/* How AI Classifies */}
+        <Text style={[styles.sectionTitle, { color: C.textMuted }]}>
+          HOW AI CLASSIFIES
+        </Text>
+        <View
+          style={[
+            styles.card,
+            {
+              backgroundColor: C.surface,
+              borderColor: C.border,
+              paddingVertical: 8,
+            },
+          ]}
         >
-          <Feather name="trash-2" size={20} color={"#ffff"} />
-          <Text style={{ color: "#ffff", fontWeight: "700" }}>
-            Clear Notification History
-          </Text>
-        </Pressable>
-      </View>
-    </ScrollView>
+          <LegendRow
+            icon="alert-circle-outline"
+            color={C.urgent}
+            title="Urgent → Allow"
+            desc="Emergency messages, priority contacts, health & safety"
+          />
+          <LegendRow
+            icon="time-outline"
+            color={C.normal}
+            title="Normal → Delay"
+            desc="Regular messages, emails, social media from known contacts"
+          />
+          <LegendRow
+            icon="notifications-off-outline"
+            color={C.textMuted}
+            title="Low → Silence"
+            desc="Promotions, spam, entertainment, engagement bait"
+            hideBorder={true}
+          />
+        </View>
+
+        {/* Data */}
+        <Text style={[styles.sectionTitle, { color: C.textMuted }]}>DATA</Text>
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: C.surface, borderColor: C.border, padding: 8 },
+          ]}
+        >
+          <TouchableOpacity
+            style={[styles.clearBtn]}
+            onPress={handleClearAll}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="trash-outline" size={20} color={C.urgent} />
+            <Text style={[styles.clearBtnText, { color: C.urgent }]}>
+              Clear Notification History
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <Text style={[styles.versionText, { color: C.textMuted }]}>
+          SmartFilter v1.0 • AI-Powered
+        </Text>
+      </ScrollView>
+    </View>
   );
 }
 
-/* COMPONENTS */
-function Row({ title, desc, theme, iconName, iconColor }: any) {
+function LegendRow({
+  icon,
+  color,
+  title,
+  desc,
+  hideBorder,
+}: {
+  icon: any;
+  color: string;
+  title: string;
+  desc: string;
+  hideBorder?: boolean;
+}) {
+  const scheme = useColorScheme();
+  const C = Colors[scheme];
   return (
-    <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 10, marginBottom: 6 }}>
-      <Feather name={iconName} size={20} color={iconColor} style={{ marginTop: 2 }} />
+    <View
+      style={[
+        styles.legendRow,
+        !hideBorder && { borderBottomWidth: 1, borderBottomColor: C.border },
+      ]}
+    >
+      <View style={[styles.legendIcon, { backgroundColor: color + "15" }]}>
+        <Ionicons name={icon} size={20} color={color} />
+      </View>
       <View style={{ flex: 1 }}>
-        <Text style={{ color: theme.text, fontWeight: "600" }}>{title}</Text>
-        <Text style={{ color: theme.textSecondary, fontSize: 12 }}>{desc}</Text>
+        <Text style={[styles.legendTitle, { color: C.text }]}>{title}</Text>
+        <Text style={[styles.legendDesc, { color: C.textSecondary }]}>
+          {desc}
+        </Text>
       </View>
     </View>
   );
 }
 
-function Divider({ theme }: any) {
-  return <View style={{ height: 1, backgroundColor: theme.border, marginVertical: 10 }} />;
-}
-
-/* STYLES */
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    width: "100%",
-  },
-
+  root: { flex: 1 },
   header: {
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+  },
+  headerTitle: { fontSize: 28, fontFamily: "Inter_700Bold" },
+  scrollContent: { padding: 16, paddingBottom: 60, gap: 16 },
+
+  aiCard: {
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: 16,
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 20,
+    gap: 16,
   },
-
-  title: {
-    fontSize: 28,
-    fontWeight: "700",
+  aiIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
-
-  section: {
-    marginBottom: 24,
-  },
+  aiTextWrap: { flex: 1, gap: 4 },
+  aiTitle: { fontSize: 15, fontFamily: "Inter_600SemiBold" },
+  aiSub: { fontSize: 13, fontFamily: "Inter_400Regular", lineHeight: 20 },
 
   sectionTitle: {
-    fontSize: 12,
-    marginBottom: 4,
-    letterSpacing: 1,
+    fontSize: 11,
+    fontFamily: "Inter_600SemiBold",
+    letterSpacing: 1.5,
+    marginTop: 12,
+  },
+  card: { borderRadius: 20, borderWidth: 1, padding: 20 },
+  cardDesc: {
+    fontSize: 13,
+    fontFamily: "Inter_400Regular",
+    lineHeight: 20,
+    marginBottom: 16,
   },
 
-  card: {
-    borderRadius: 16,
-    padding: 16,
-    gap: 10,
-  },
-
-  inputRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginBottom: 12,
-  },
-
+  inputRow: { flexDirection: "row", gap: 12, marginBottom: 16 },
   input: {
     flex: 1,
-    borderWidth: 1,
+    height: 48,
     borderRadius: 12,
-    padding: 12,
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    fontSize: 14,
+    fontFamily: "Inter_400Regular",
   },
-
   addBtn: {
     width: 48,
     height: 48,
     borderRadius: 12,
-    // backgroundColor: "#22d3ee",
-    justifyContent: "center",
     alignItems: "center",
+    justifyContent: "center",
   },
 
-  chips: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginTop: 4,
-  },
-
-  suggestionChip: {
+  chipWrap: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
+  chip: {
     paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 50,
-    marginRight: 8,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  chipText: { fontSize: 13, fontFamily: "Inter_500Medium" },
+  emptyHint: { fontSize: 13, fontFamily: "Inter_400Regular" },
+
+  legendRow: { flexDirection: "row", gap: 16, paddingVertical: 16 },
+  legendIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  legendTitle: {
+    fontSize: 15,
+    fontFamily: "Inter_600SemiBold",
     marginBottom: 4,
   },
+  legendDesc: { fontSize: 13, fontFamily: "Inter_400Regular", lineHeight: 18 },
 
-  dangerBtn: {
+  clearBtn: {
     flexDirection: "row",
-    justifyContent: "center",
     alignItems: "center",
-    gap: 10,
-    padding: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    marginTop: 35,
-    color: "#ffff"
-  },
-  infoHeader: {
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 20,
-    gap: 6,
-  },
-  infoDes: {
-    flexDirection: "column",
     justifyContent: "center",
-    flex: 1,
-    // alignItems: "center",
+    gap: 10,
+    paddingVertical: 10,
+  },
+  clearBtnText: { fontSize: 15, fontFamily: "Inter_600SemiBold" },
+
+  versionText: {
+    textAlign: "center",
+    fontSize: 12,
+    fontFamily: "Inter_400Regular",
+    marginTop: 16,
   },
 
-  infoTitle: {
-    fontSize: 16,
-    fontWeight: "700",
+  themeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+    padding: 16,
   },
-
-  infoDesc: {
-    fontSize: 13,
-    lineHeight: 18,
+  themeIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
   },
+  themeTitle: { fontSize: 15, fontFamily: "Inter_600SemiBold" },
+  themeSub: { fontSize: 13, fontFamily: "Inter_400Regular", marginTop: 2 },
+  themeChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  themeChipText: { fontSize: 13, fontFamily: "Inter_500Medium" },
 });
