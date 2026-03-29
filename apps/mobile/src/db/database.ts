@@ -14,10 +14,10 @@ export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
 // Defines the tables and performance indexes
 async function initSchema(database: SQLite.SQLiteDatabase): Promise<void> {
   await database.execAsync(`
-    // Enable WAL mode for faster writing and better performance
+    -- Enable WAL mode for faster writing and better performance
     PRAGMA journal_mode = WAL;
 
-    // Table for storing classified notifications
+    -- Table for storing classified notifications
     CREATE TABLE IF NOT EXISTS notifications (
       id         INTEGER PRIMARY KEY AUTOINCREMENT,
       appName    TEXT NOT NULL DEFAULT '',
@@ -30,21 +30,21 @@ async function initSchema(database: SQLite.SQLiteDatabase): Promise<void> {
       createdAt  TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
-    // General key-value table for app settings (like Focus Mode status)
+    -- General key-value table for app settings
     CREATE TABLE IF NOT EXISTS settings (
       key TEXT PRIMARY KEY,
       value TEXT NOT NULL
     );
 
-    // User-defined rules to force specific apps/contacts into categories
+    -- User-defined rules to force specific apps/contacts into categories
     CREATE TABLE IF NOT EXISTS rules (
       id             INTEGER PRIMARY KEY AUTOINCREMENT,
-      type           TEXT NOT NULL, // 'app' or 'contact'
-      value          TEXT NOT NULL, // package name or contact name
+      type           TEXT NOT NULL,
+      value          TEXT NOT NULL,
       forcedCategory TEXT NOT NULL
     );
 
-    // Create indexes to make searching/sorting by category and date much faster
+    -- Create indexes to make searching/sorting much faster
     CREATE INDEX IF NOT EXISTS idx_notifications_category ON notifications(category);
     CREATE INDEX IF NOT EXISTS idx_notifications_isDelayed ON notifications(isDelayed);
     CREATE INDEX IF NOT EXISTS idx_notifications_createdAt ON notifications(createdAt DESC);
