@@ -4,7 +4,22 @@ import { Category } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { CategoryBadge } from "./CategoryBadge";
+
+function getAppIcon(appName: string): any {
+  const name = appName.toLowerCase();
+  if (name.includes("whatsapp")) return "logo-whatsapp";
+  if (name.includes("gmail") || name.includes("mail")) return "mail";
+  if (name.includes("twitter") || name.includes("x")) return "logo-twitter";
+  if (name.includes("linkedin")) return "logo-linkedin";
+  if (name.includes("slack")) return "logo-slack";
+  if (name.includes("instagram") || name.includes("ig"))
+    return "logo-instagram";
+  if (name.includes("facebook") || name.includes("fb")) return "logo-facebook";
+  if (name.includes("sms") || name.includes("message") || name.includes("text"))
+    return "chatbubble-ellipses";
+  if (name.includes("discord")) return "logo-discord";
+  return "apps-outline";
+}
 
 interface NotificationCardProps {
   id: number;
@@ -16,6 +31,43 @@ interface NotificationCardProps {
   onDismiss?: (id: number) => void;
   onRelease?: (id: number) => void;
   reasoning?: string;
+}
+
+function formatTime(iso: string): string {
+  try {
+    let dateStr = iso;
+
+    // SQLite databases usually output "YYYY-MM-DD HH:MM:SS" (UTC).
+    // We must forcefully convert it to a valid ISO-8601 UTC string by swapping the space for 'T' and adding 'Z'.
+    if (dateStr.length === 19 && dateStr.includes(" ")) {
+      dateStr = dateStr.replace(" ", "T") + "Z";
+    } else if (
+      dateStr.includes("T") &&
+      !dateStr.endsWith("Z") &&
+      !dateStr.includes("+") &&
+      !dateStr.includes("-")
+    ) {
+      // Catch-all: If it has 'T' but no timezone indicator, force it to 'Z' (UTC)
+      dateStr += "Z";
+    }
+
+    const d = new Date(dateStr);
+    const now = new Date();
+
+    let diffMs = now.getTime() - d.getTime();
+    if (diffMs < 0) diffMs = 0;
+
+    const diffMin = Math.floor(diffMs / 60000);
+
+    if (diffMin < 1) return "less than a minute ago";
+    if (diffMin < 60) return `${diffMin} minutes ago`;
+    const diffH = Math.floor(diffMin / 60);
+    if (diffH < 24) return `${diffH} hours ago`;
+
+    return d.toLocaleDateString();
+  } catch {
+    return "";
+  }
 }
 
 export function NotificationCard({
@@ -42,33 +94,99 @@ export function NotificationCard({
         },
       ]}
     >
-      {/* Icon */}
-      <View style={[styles.iconBox, { backgroundColor: C.tint }]}>
-        <Text style={styles.iconText}>{appName?.[0]?.toUpperCase()}</Text>
+      {/* Left Column: Icon Box */}
+      <View style={[styles.iconBox, { backgroundColor: C.tint + "15" }]}>
+        <Ionicons name={getAppIcon(appName)} size={22} color={C.tint} />
       </View>
 
-      {/* Content */}
+      {/* Right Column: Content */}
       <View style={styles.content}>
+        {/* Header Row */}
         <View style={styles.row}>
           <Text style={[styles.appName, { color: C.textSecondary }]}>
             {appName.toUpperCase()}
           </Text>
-          <Text style={[styles.time, { color: C.textMuted }]}>{createdAt}</Text>
+          <Text style={[styles.time, { color: C.textMuted }]}>
+            {formatTime(createdAt)}
+          </Text>
         </View>
 
         {/* Title */}
         {title && (
-          <Text style={[styles.title, { color: C.text }]}>{title}</Text>
+          <Text style={[styles.title, { color: C.text }]} numberOfLines={1}>
+            {title}
+          </Text>
         )}
 
         {/* Body */}
-        <Text style={[styles.body, { color: C.textSecondary }]}>{body}</Text>
+        <Text
+          style={[styles.body, { color: C.textSecondary }]}
+          numberOfLines={3}
+        >
+          {body}
+        </Text>
 
         {/* Tags Row */}
-        <View style={styles.footer}>
-          <CategoryBadge category={category} size="md" />
+        <View style={styles.tagRow}>
+          {category === "urgent" && (
+            <>
+              <View style={[styles.tag, { backgroundColor: C.urgent + "15" }]}>
+                <Ionicons
+                  name="alert-circle-outline"
+                  size={12}
+                  color={C.urgent}
+                />
+                <Text style={[styles.tagText, { color: C.urgent }]}>
+                  Urgent
+                </Text>
+              </View>
+              <View style={[styles.tag, { backgroundColor: C.low + "15" }]}>
+                <Ionicons
+                  name="checkmark-circle-outline"
+                  size={12}
+                  color={C.low}
+                />
+                <Text style={[styles.tagText, { color: C.low }]}>Allowed</Text>
+              </View>
+            </>
+          )}
 
-          {/* Action1 */}
+          {category === "normal" && (
+            <>
+              <View style={[styles.tag, { backgroundColor: C.normal + "15" }]}>
+                <Ionicons
+                  name="help-circle-outline"
+                  size={12}
+                  color={C.normal}
+                />
+                <Text style={[styles.tagText, { color: C.normal }]}>
+                  Normal
+                </Text>
+              </View>
+              <View
+                style={[styles.tag, { backgroundColor: C.textMuted + "15" }]}
+              >
+                <Ionicons name="time-outline" size={12} color={C.textMuted} />
+                <Text style={[styles.tagText, { color: C.textMuted }]}>
+                  Delayed
+                </Text>
+              </View>
+            </>
+          )}
+
+          {category === "noise" && (
+            <View style={[styles.tag, { backgroundColor: C.textMuted + "15" }]}>
+              <Ionicons
+                name="notifications-off-outline"
+                size={12}
+                color={C.textMuted}
+              />
+              <Text style={[styles.tagText, { color: C.textMuted }]}>
+                Silenced
+              </Text>
+            </View>
+          )}
+
           {onRelease && (
             <TouchableOpacity
               style={[
@@ -83,14 +201,30 @@ export function NotificationCard({
             </TouchableOpacity>
           )}
         </View>
-        {/* Action2 */}
+
+        {/* AI Reasoning */}
+        <Text
+          style={[styles.reasoning, { color: C.textMuted }]}
+          numberOfLines={1}
+        >
+          {reasoning
+            ? `AI: ${reasoning}`
+            : "AI: Classified using Kortex model."}
+        </Text>
+
+        {/* Actions */}
         {onDismiss && (
-          <TouchableOpacity
-            onPress={() => onDismiss(id)}
-            style={[styles.dismissButton, { backgroundColor: C.urgentBg }]}
-          >
-            <Text style={[styles.dismiss, { color: C.urgent }]}>Dismiss</Text>
-          </TouchableOpacity>
+          <View style={{ alignItems: "flex-end", marginTop: 8 }}>
+            <TouchableOpacity
+              style={[styles.dismissButton, { borderColor: C.border }]}
+              onPress={() => onDismiss(id)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.dismissText, { color: C.textMuted }]}>
+                Dismiss
+              </Text>
+            </TouchableOpacity>
+          </View>
         )}
       </View>
     </View>
@@ -100,31 +234,20 @@ export function NotificationCard({
 const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
-    borderRadius: 18,
-    padding: 14,
-    marginVertical: 8,
+    borderRadius: 20,
+    padding: 16,
+    paddingRight: 16,
+    marginBottom: 12,
     borderWidth: 1,
-
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
   },
 
   iconBox: {
-    width: 46,
-    height: 46,
+    width: 44,
+    height: 44,
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 12,
-  },
-
-  iconText: {
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: 16,
+    marginRight: 14,
   },
 
   content: {
@@ -135,6 +258,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    marginBottom: 4,
   },
 
   appName: {
@@ -158,19 +282,22 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
 
-  footer: {
+  tagRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 10,
+    gap: 6,
+    marginBottom: 8,
   },
 
   dismissButton: {
     paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    borderWidth: 1,
   },
-
+  reasoning: {
+    fontSize: 12,
+    fontFamily: "Inter_400Regular",
+  },
   dismiss: {
     fontSize: 12,
     fontFamily: "Inter_500Medium",
@@ -187,5 +314,9 @@ const styles = StyleSheet.create({
   tagText: {
     fontSize: 12,
     fontFamily: "Inter_600SemiBold",
+  },
+  dismissText: {
+    fontSize: 12,
+    fontFamily: "Inter_500Medium",
   },
 });
