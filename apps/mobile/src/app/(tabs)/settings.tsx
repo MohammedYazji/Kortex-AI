@@ -2,6 +2,7 @@ import { Feather, Ionicons } from "@expo/vector-icons";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   Alert,
+  Platform,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -96,6 +97,18 @@ export default function SettingsScreen() {
    * Confirms and deletes a custom priority rule globally.
    */
   const handleDeleteRule = async (id: number) => {
+    // Web Fallback: No alert btn in browser
+    if (Platform.OS === "web") {
+      const confirmed = window.confirm(
+        "Are you sure you want to remove this priority rule?",
+      );
+      if (confirmed) {
+        await deleteRule(id);
+        await loadRules();
+      }
+      return;
+    }
+    // Phone Version
     Alert.alert(
       "Remove Rule",
       "Are you sure you want to remove this priority rule?",
@@ -324,10 +337,12 @@ export default function SettingsScreen() {
                   { backgroundColor: C.surfaceElevated, borderColor: C.border },
                 ]}
                 onPress={() => handleDeleteRule(r.id)}
+                activeOpacity={0.7}
               >
                 <Text style={[styles.chipText, { color: C.textSecondary }]}>
-                  ✓ {r.value}
+                  {r.value}
                 </Text>
+                <Ionicons name="close-circle" size={16} color={C.textMuted} />
               </TouchableOpacity>
             ))}
           </View>
@@ -383,10 +398,12 @@ export default function SettingsScreen() {
                   { backgroundColor: C.surfaceElevated, borderColor: C.border },
                 ]}
                 onPress={() => handleDeleteRule(r.id)}
+                activeOpacity={0.7}
               >
                 <Text style={[styles.chipText, { color: C.textSecondary }]}>
-                  ✓ {r.value}
+                  {r.value}
                 </Text>
+                <Ionicons name="close-circle" size={16} color={C.textMuted} />
               </TouchableOpacity>
             ))}
           </View>
@@ -551,6 +568,9 @@ const styles = StyleSheet.create({
 
   chipWrap: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   chip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
