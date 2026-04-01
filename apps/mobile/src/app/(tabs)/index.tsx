@@ -307,10 +307,14 @@ export default function DashboardScreen() {
         animationType="slide"
         onRequestClose={() => setTestVisible(false)}
       >
-        <Pressable style={styles.overlay} onPress={() => setTestVisible(false)}>
-          <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={styles.avoidView}
+        {/* Add KeyboardAvoidingView to push everything up */}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
+        >
+          <Pressable
+            style={styles.overlay}
+            onPress={() => setTestVisible(false)}
           >
             <Pressable
               style={[
@@ -417,7 +421,10 @@ export default function DashboardScreen() {
                   style={[
                     styles.btn,
                     styles.sendBtn,
-                    { backgroundColor: C.tint, opacity: processing ? 0.6 : 1 },
+                    {
+                      backgroundColor: C.tint,
+                      opacity: processing ? 0.6 : 1,
+                    },
                   ]}
                   onPress={handleSendTest}
                   disabled={processing}
@@ -428,8 +435,8 @@ export default function DashboardScreen() {
                 </TouchableOpacity>
               </View>
             </Pressable>
-          </KeyboardAvoidingView>
-        </Pressable>
+          </Pressable>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -555,7 +562,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.6)",
     justifyContent: "flex-end",
   },
-  avoidView: { justifyContent: "flex-end" },
   sheet: {
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
