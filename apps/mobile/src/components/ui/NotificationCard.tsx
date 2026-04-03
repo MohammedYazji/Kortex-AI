@@ -186,20 +186,6 @@ export function NotificationCard({
               </Text>
             </View>
           )}
-
-          {onRelease && (
-            <TouchableOpacity
-              style={[
-                styles.tag,
-                { backgroundColor: C.tint + "15", marginLeft: "auto" },
-              ]}
-              onPress={() => onRelease(id)}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="play-outline" size={12} color={C.tint} />
-              <Text style={[styles.tagText, { color: C.tint }]}>Release</Text>
-            </TouchableOpacity>
-          )}
         </View>
 
         {/* AI Reasoning */}
@@ -212,18 +198,29 @@ export function NotificationCard({
             : "AI: Classified using Kortex model."}
         </Text>
 
-        {/* Actions */}
-        {onDismiss && (
-          <View style={{ alignItems: "flex-end", marginTop: 8 }}>
-            <TouchableOpacity
-              style={[styles.dismissButton, { borderColor: C.border }]}
-              onPress={() => onDismiss(id)}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.dismissText, { color: C.textMuted }]}>
-                Dismiss
-              </Text>
-            </TouchableOpacity>
+        {/* Action Buttons */}
+        {(onRelease || onDismiss) && (
+          <View style={styles.actionFooter}>
+            {onRelease && (
+              <TouchableOpacity
+                style={[styles.actionBtn, { borderColor: C.tint + "40", backgroundColor: C.tint + "10" }]}
+                onPress={() => onRelease(id)}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="play-outline" size={14} color={C.tint} style={{ marginRight: 4 }} />
+                <Text style={[styles.actionText, { color: C.tint }]}>Release</Text>
+              </TouchableOpacity>
+            )}
+
+            {onDismiss && (
+              <TouchableOpacity
+                style={[styles.actionBtn, { borderColor: C.border }]}
+                onPress={() => onDismiss(id)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.actionText, { color: C.textMuted }]}>Dismiss</Text>
+              </TouchableOpacity>
+            )}
           </View>
         )}
       </View>
@@ -284,23 +281,34 @@ const styles = StyleSheet.create({
 
   tagRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: 6,
     marginBottom: 8,
   },
 
-  dismissButton: {
-    paddingVertical: 5,
+  actionFooter: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 10,
+  },
+  actionBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 12,
     borderWidth: 1,
   },
+  actionText: {
+    fontSize: 12,
+    fontFamily: "Inter_600SemiBold",
+  },
+
   reasoning: {
     fontSize: 12,
     fontFamily: "Inter_400Regular",
-  },
-  dismiss: {
-    fontSize: 12,
-    fontFamily: "Inter_500Medium",
   },
 
   tag: {
@@ -314,9 +322,5 @@ const styles = StyleSheet.create({
   tagText: {
     fontSize: 12,
     fontFamily: "Inter_600SemiBold",
-  },
-  dismissText: {
-    fontSize: 12,
-    fontFamily: "Inter_500Medium",
   },
 });
