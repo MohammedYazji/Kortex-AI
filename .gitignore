@@ -39,3 +39,9 @@ Thumbs.db
 *.db
 *.db-journal
 pgdata/
+
+# --- Datasets ---
+dataset/**/*.csv
+dataset/**/*.txt
+dataset/**/*.jsonl
+!dataset/scripts/
