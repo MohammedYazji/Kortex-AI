@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <style>body { padding-top: 0; }</style>
   <link rel="icon" type="image/png" href="./images/logo_green_fixed.png" />
 </head>
 <body>
@@ -19,19 +20,24 @@
   </div>
 
   <nav class="nav-center">
-    <a href="#">Home</a>
-    <a href="#">Why Kortex?</a>
-    <a href="#">How It Works</a>
-    <a href="#">Privacy</a>
-    <a href="#">vs Airplane</a>
+    <a href="#home">Home</a>
+    <a href="#why">Why Kortex?</a>
+    <a href="#how">How It Works</a>
+    <a href="#privacy">Privacy</a>
+    <a href="#compare">vs Airplane</a>
+    <a href="#team">Kortex Team</a>
+
     
   </nav>
 
-  <button class="btn-download">Download App</button>
+  <button class="btn-download" onclick="location.href='#download'">Download App</button>
+  <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+    <span></span><span></span><span></span>
+  </button>
 </header>
 
 <!-- Hero Section -->
- <section class="hero">
+ <section class="hero" id ="home">
   
   <div class="hero-text">
     <h1>
@@ -45,7 +51,7 @@
     </p>
 
     <div class="hero-buttons">
-      <button class="btn-primary">Download App</button>
+      <button class="btn-primary" onclick="location.href='#download'">Download App</button>
     </div>
 
     <div class="store-buttons">
@@ -58,9 +64,8 @@
     <img src="./images/hero.jpg" alt="App Preview">
   </div>
 </section>
-
 <!-- Why Kortex Section -->
-<section class="why">
+<section class="why" id ="why">
 
   <div class="why-container">
 
@@ -102,7 +107,7 @@
 </section>
 
 <!-- How It Works Section -->
-<section class="how">
+<section class="how" id ="how">
   <div class="how-container">
 
     <h2>How Kortex AI Works</h2>
@@ -210,9 +215,8 @@
 
   </div>
 </section>
-
 <!-- Privacy Section -->
-<section class="privacy">
+<section class="privacy" id ="privacy">
 
   <div class="privacy-container">
 
@@ -340,7 +344,7 @@
 
 </section>
 <!-- Download Section -->
-<section class="download">
+<section class="download" id ="download">
 
   <div class="download-container">
 
@@ -367,7 +371,50 @@
 
 </section>
 
+<!-- Footer Section -->
 
+<footer class="footer" id = "team">
 
+  <div class="footer-glow"></div>
+
+  <div class="footer-container">
+
+    <h2 class="footer-title">Kortex Engineers</h2>
+    <p class="footer-sub">
+      Built with passion by the team behind Kortex AI
+    </p>
+
+    <!-- TEAM -->
+    <div class="team">
+
+      <div class="member">
+        <img src="./images/رند.jpg" alt="">
+        <h4>ٌRand Haymouni</h4>
+        <a href="https://www.linkedin.com/in/rand-haymouni/" target="_blank">LinkedIn</a>
+      </div>
+
+      <div class="member">
+        <img src="./images/محمد.jpg" alt="">
+        <h4>Mohammad Alyazji</h4>
+        <a href="https://www.linkedin.com/in/mohammedyazji/" target="_blank">LinkedIn</a>
+      </div>
+
+      <div class="member">
+        <img src="./images/نادين.jpeg" alt="">
+        <h4>Nadeen Shadeed</h4>
+        <a href="https://www.linkedin.com/in/nadeen-shadeed-60211a2a5/" target="_blank">LinkedIn</a>
+      </div>
+
+    </div>
+
+    <!-- bottom -->
+    <div class="footer-bottom">
+      <p>© 2026 Kortex AI. All rights reserved.</p>
+    </div>
+
+  </div>
+</footer>
+
+<script src="main.js"></script>
 </body>
 </html>
