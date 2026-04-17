@@ -1,4 +1,4 @@
-//  Navbar: scrolled class 
+// Navbar: scrolled class 
 const navbar = document.querySelector('.navbar');
 
 window.addEventListener('scroll', () => {
@@ -36,8 +36,8 @@ document.addEventListener('click', (e) => {
 });
 
 
-// Active nav link on scroll 
-const sections = document.querySelectorAll('section[id], footer[id]');
+//  Active nav link on scroll 
+const sections = document.querySelectorAll('section[id], footer[id], .team-section[id]');
 const navLinks = document.querySelectorAll('.nav-center a');
 
 const sectionObserver = new IntersectionObserver((entries) => {
@@ -54,7 +54,7 @@ const sectionObserver = new IntersectionObserver((entries) => {
 sections.forEach(s => sectionObserver.observe(s));
 
 
-// Scroll reveal animations
+//  Scroll reveal animations ─
 const revealObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
@@ -64,9 +64,9 @@ const revealObserver = new IntersectionObserver((entries) => {
   });
 }, { threshold: 0.12 });
 
-// Auto-add reveal class to major cards/sections
+// Auto-add reveal class to major cards sections
 const revealTargets = document.querySelectorAll(
-  '.why-card, .step, .class-card, .feature, .member, .focus-card'
+  '.why-card, .step, .class-card, .feature, .member, .focus-card, .footer-store-btn'
 );
 
 revealTargets.forEach((el, i) => {
@@ -76,7 +76,7 @@ revealTargets.forEach((el, i) => {
 });
 
 
-//  Smooth scroll for anchor links 
+// Smooth scroll for anchor links 
 document.querySelectorAll('a[href^="#"], button[onclick*="#"]').forEach(el => {
   el.addEventListener('click', function (e) {
     const href = this.getAttribute('href') || this.getAttribute('onclick');

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Kortex AI</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
@@ -25,7 +26,7 @@
     <a href="#how">How It Works</a>
     <a href="#privacy">Privacy</a>
     <a href="#compare">vs Airplane</a>
-    <a href="#team">Kortex Team</a>
+    <a href="#team-section">Kortex Team</a>
 
     
   </nav>
@@ -78,22 +79,22 @@
     <div class="why-cards">
 
       <div class="why-card">
-        <h3>Stay Focused</h3>
+        <span class="material-symbols-outlined why-icon">center_focus_strong</span><h3>Stay Focused</h3>
         <p>Eliminate distractions and focus only on what truly matters.</p>
       </div>
 
       <div class="why-card">
-        <h3>Smart Filtering</h3>
+        <span class="material-symbols-outlined why-icon">filter_alt</span><h3>Smart Filtering</h3>
         <p>AI learns your priorities and filters notifications automatically.</p>
       </div>
 
       <div class="why-card">
-        <h3>Save Time</h3>
+        <span class="material-symbols-outlined why-icon">schedule</span><h3>Save Time</h3>
         <p>No more checking your phone every minute for useless alerts.</p>
       </div>
 
       <div class="why-card focus">
-        <h3>Focus Mode</h3>
+        <span class="material-symbols-outlined why-icon">do_not_disturb_on</span><h3>Focus Mode</h3>
         <p>
           In a meeting or at the mosque, Kortex silences distractions and
           lets only urgent notifications through.
@@ -119,7 +120,7 @@
 
       <!-- Step 1 -->
       <div class="step">
-        <div class="circle">📩</div>
+        <div class="circle"><span class="material-symbols-outlined">mail</span></div>
         <h3>Notification Arrives</h3>
         <p>Any app sends a notification to your device.</p>
       </div>
@@ -128,7 +129,7 @@
 
       <!-- Step 2 -->
       <div class="step">
-        <div class="circle">🧠</div>
+        <div class="circle"><span class="material-symbols-outlined">psychology</span></div>
         <h3>AI Reads It</h3>
         <p>Kortex analyzes the message locally on your device.</p>
       </div>
@@ -137,7 +138,7 @@
 
       <!-- Step 3 -->
       <div class="step">
-        <div class="circle">⚡</div>
+        <div class="circle"><span class="material-symbols-outlined">bolt</span></div>
         <h3>Classified</h3>
         <p>Sorted into Urgent, Normal, or Noise instantly.</p>
       </div>
@@ -146,7 +147,7 @@
 
       <!-- Step 4 -->
       <div class="step">
-        <div class="circle">🔔</div>
+        <div class="circle"><span class="material-symbols-outlined">notifications_active</span></div>
         <h3>Action Taken</h3>
         <p>Only important notifications reach you.</p>
       </div>
@@ -251,26 +252,26 @@
 
         <div class="card-glow"></div>
 
-        <h3>On-Device AI 🔒</h3>
+        <h3>On-Device AI <span class="material-symbols-outlined" style="font-size:20px;vertical-align:middle">lock</span></h3>
         <p class="card-sub">Fast • Private • Secure</p>
 
         <div class="flow-drive">
 
           <div class="node">
-            📱 <span>Your Phone</span>
+            <span class="material-symbols-outlined">smartphone</span><span>Your Phone</span>
           </div>
 
           <div class="arrow">→</div>
 
           <div class="node center">
-            🧠 <span>Kortex AI</span>
+            <span class="material-symbols-outlined">psychology</span><span>Kortex AI</span>
             <small>Local Processing</small>
           </div>
 
           <div class="arrow">→</div>
 
           <div class="node">
-            🔔 <span>Filtered</span>
+            <span class="material-symbols-outlined">notifications_active</span><span>Filtered</span>
           </div>
 
         </div>
@@ -298,8 +299,8 @@
 
       <div class="row head">
         <div>Feature</div>
-        <div>✈ Airplane</div>
-        <div>🧠 Kortex</div>
+        <div><span class="material-symbols-outlined" style="font-size:15px">airplanemode_active</span> Airplane</div>
+        <div><span class="material-symbols-outlined" style="font-size:15px">psychology</span> Kortex</div>
       </div>
 
       <div class="row">
@@ -343,76 +344,111 @@
   </div>
 
 </section>
-<!-- Download Section -->
-<section class="download" id ="download">
+<!-- Team Section (moved here) -->
+<section class="team-section" id="team-section">
+  <div class="team-container">
 
-  <div class="download-container">
+    <h2 class="team-title">Kortex Engineers</h2>
+    <p class="team-sub">Built with passion by the team behind Kortex AI</p>
 
-    <h2>Ready to take back control?</h2>
-
-    <p class="sub">
-      Scan the code or open the link and experience focus like never before.
-    </p>
-
-    <!-- QR CENTER -->
-    <div class="qr-wrapper">
-      <div class="qr-glow"></div>
-      <img src="./images/qr.png" alt="QR Code">
-    </div>
-
-    <!-- ACTIONS -->
-    <div class="download-actions">
-      <a href="https://expo.dev/accounts/mohammed_yazji/projects/kortex/builds/b4c2de5b-7501-4c6c-8d08-aa7c31cd94d7" target="_blank">
-        Open Download Link →
-      </a>
-    </div>
-
-  </div>
-
-</section>
-
-<!-- Footer Section -->
-
-<footer class="footer" id = "team">
-
-  <div class="footer-glow"></div>
-
-  <div class="footer-container">
-
-    <h2 class="footer-title">Kortex Engineers</h2>
-    <p class="footer-sub">
-      Built with passion by the team behind Kortex AI
-    </p>
-
-    <!-- TEAM -->
     <div class="team">
 
       <div class="member">
-        <img src="./images/رند.jpg" alt="">
-        <h4>ٌRand Haymouni</h4>
-        <a href="https://www.linkedin.com/in/rand-haymouni/" target="_blank">LinkedIn</a>
+        <img src="./images/رند.jpg" alt="Rand Haymouni">
+        <h4>Rand Haymouni</h4>
+        <a href="https://www.linkedin.com/in/rand-haymouni/" target="_blank">
+          <span class="material-symbols-outlined">link</span> LinkedIn
+        </a>
       </div>
 
       <div class="member">
-        <img src="./images/محمد.jpg" alt="">
-        <h4>Mohammad Alyazji</h4>
-        <a href="https://www.linkedin.com/in/mohammedyazji/" target="_blank">LinkedIn</a>
+        <img src="./images/محمد.jpg" alt="Mohammad Alyazji">
+        <h4>Mohammed Alyazji</h4>
+        <a href="https://www.linkedin.com/in/mohammedyazji/" target="_blank">
+          <span class="material-symbols-outlined">link</span> LinkedIn
+        </a>
       </div>
 
       <div class="member">
-        <img src="./images/نادين.jpeg" alt="">
+        <img src="./images/نادين.jpeg" alt="Nadeen Shadeed">
         <h4>Nadeen Shadeed</h4>
-        <a href="https://www.linkedin.com/in/nadeen-shadeed-60211a2a5/" target="_blank">LinkedIn</a>
+        <a href="https://www.linkedin.com/in/nadeen-shadeed-60211a2a5/" target="_blank">
+          <span class="material-symbols-outlined">link</span> LinkedIn
+        </a>
       </div>
 
     </div>
+  </div>
+</section>
+<!-- Footer -->
+<footer class="footer" id="download">
 
-    <!-- bottom -->
-    <div class="footer-bottom">
-      <p>© 2026 Kortex AI. All rights reserved.</p>
+  <div class="footer-glow"></div>
+
+  <div class="footer-main">
+
+    <div class="footer-brand">
+
+      <div class="footer-logo">
+        <img src="./images/logo_green_fixed.png" alt="Kortex Logo" class="footer-logo-img">
+        <span>Kortex <em>AI</em></span>
+      </div>
+
+      <p class="footer-brand-desc">
+        AI-powered notification filtering<br>
+        that helps you focus on what truly matters.
+      </p>
+
+      <a href="https://expo.dev/accounts/mohammed_yazji/projects/kortex/builds/b4c2de5b-7501-4c6c-8d08-aa7c31cd94d7"
+         target="_blank"
+         class="footer-download-btn">
+        <span class="material-symbols-outlined">download</span>
+        Open Download Link
+      </a>
+
+    </div>
+
+    <div class="footer-qr">
+
+      <div class="qr-wrapper">
+        <div class="qr-glow"></div>
+        <img src="./images/qr.png" alt="QR Code">
+      </div>
+
+      <p class="qr-label">
+        <span class="material-symbols-outlined">qr_code_scanner</span>
+        Scan to Download
+      </p>
+
+    </div>
+
+    <div class="footer-features">
+
+      <div class="feature-card">
+        <h4>Smart Filtering</h4>
+        <p>AI detects important alerts</p>
+      </div>
+
+      <div class="feature-card">
+        <h4>Focus Mode</h4>
+        <p>Block distractions instantly</p>
+      </div>
+
     </div>
 
   </div>
+
+  <div class="footer-bottom-bar">
+    <p>© 2026 Kortex AI. All rights reserved.</p>
+
+    <div class="footer-nav">
+      <a href="#home">Home</a>
+      <a href="#why">Why Kortex</a>
+      <a href="#privacy">Privacy</a>
+      <a href="#compare">vs Airplane</a>
+    </div>
+  </div>
+
 </footer>
 
 <script src="main.js"></script>
