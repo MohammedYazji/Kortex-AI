@@ -1140,3 +1140,13 @@ section[id], footer[id] {
   opacity: 1;
   transform: translateY(0);
 }
+
+::selection {
+  background: #00d1b2;
+  color: #000;
+}
+
+::-moz-selection {
+  background: #00d1b2;
+  color: #000;
+}
