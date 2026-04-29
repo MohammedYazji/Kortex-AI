@@ -58,4 +58,4 @@ The V1→V5 progression shows that targeted dataset improvements — removing lo
 
 ### Try Kortex Now!!
 
-[Try Kortex](https://expo.dev/accounts/mohammed_yazji/projects/kortex/builds/b4c2de5b-7501-4c6c-8d08-aa7c31cd94d7)
+[Try Kortex](https://expo.dev/accounts/mohammed_yazji/projects/kortex/builds/45bc4030-5f24-4401-84c3-0d809f4e9b5f)
